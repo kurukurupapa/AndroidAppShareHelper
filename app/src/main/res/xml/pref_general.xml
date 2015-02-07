@@ -1,0 +1,18 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:key="notification_flag"
+        android:title="@string/pref_title_notification"
+        android:summary="@string/pref_description_notification"
+        android:defaultValue="true" />
+
+    <SwitchPreference
+        android:key="developer_flag"
+        android:title="@string/pref_title_developer"
+        android:summary="@string/pref_description_developer"
+        android:defaultValue="false" />
+
+    <Preference android:title="@string/pref_title_version"
+        android:summary="@string/pref_description_version" />
+
+</PreferenceScreen>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">アプリ間共有の助け</string>
+    <string name="title_activity_main">アプリ間共有の助け</string>
+    <string name="title_activity_recv">アプリを選択</string>
+
+    <!-- ナビゲーションドロワー内の項目名 -->
+    <string name="title_nav_history">共有履歴</string>
+    <string name="title_nav_standard_app">標準アプリ一覧</string>
+    <string name="title_nav_settings">設定</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- メニュー -->
+    <string name="action_settings">設定</string>
+
+    <!-- 文字列 -->
+    <string name="label_share_content">共有内容</string>
+    <string name="label_share_app_selection">共有先アプリ選択</string>
+    <string name="label_unknown">不明</string>
+    <string name="label_empty_intent_type">タイプなし</string>
+    <string name="label_dev_switch">開発者向け表示</string>
+    <string name="label_standard_app_switch">標準アプリに設定</string>
+    <string name="label_extra_key">拡張データ名</string>
+
+    <!-- メッセージ -->
+    <string name="msg_no_items">データがありません。</string>
+    <string name="msg_share_history_no_items">共有履歴がありません。&lt;br&gt;&lt;br&gt;使い方は&lt;a href=\&quot;https://play.google.com/store/apps/details?id=com.kurukurupapa.appsharehelper\&quot;&gt;こちら&lt;/a&gt;を参照ください。</string>
+    <string name="msg_standard_app_no_items">標準アプリの設定がありません。</string>
+    <string name="msg_intent_send">共有しました。</string>
+
+    <!-- エラーメッセージ -->
+    <string name="msg_err_src_app">共有元アプリの取得に失敗しました。</string>
+
+</resources>
