@@ -12,7 +12,9 @@
         android:summary="@string/pref_description_developer"
         android:defaultValue="false" />
 
-    <Preference android:title="@string/pref_title_version"
+    <Preference
+        android:key="version"
+        android:title="@string/pref_title_version"
         android:summary="@string/pref_description_version" />
 
 </PreferenceScreen>
