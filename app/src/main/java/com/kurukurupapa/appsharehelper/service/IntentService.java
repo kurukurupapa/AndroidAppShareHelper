@@ -18,8 +18,9 @@ import com.kurukurupapa.appsharehelper.helper.IntentToStringStyle;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -63,8 +64,9 @@ public class IntentService {
 
     public String getShortIntentStr() {
         ArrayList<String> lines = new ArrayList<String>();
-        if (mIntent.getClipData() != null) {
-            lines.add(getClipDataStr(mIntent));
+        ClipData clipData = getClipData(mIntent);
+        if (clipData != null) {
+            lines.add(getClipDataStr(clipData));
         }
         if (mIntent.getData() != null) {
             lines.add(mIntent.getDataString());
@@ -83,10 +85,7 @@ public class IntentService {
                 ;
     }
 
-    private String getClipDataStr(Intent intent) {
-        // APIレベル16以上
-        ClipData clipData = intent.getClipData();
-
+    private String getClipDataStr(ClipData clipData) {
 //        String clipDataStr = ToStringBuilder.reflectionToString(clipData, ToStringStyle.SIMPLE_STYLE);
 //        Log.d(TAG, "ClipData=" + clipDataStr);
 //        return clipDataStr;
@@ -104,7 +103,39 @@ public class IntentService {
         return StringUtils.join(lines, "\n");
     }
 
-    // FIXME
+    /**
+     * IntentからClipDataを取得します。
+     *
+     * Intent#getCliplData()で取得できますが、APIレベル16(Android 4.1)以上のAPIです。
+     * APIレベル14(Android 4.0)でも動作させるため、リフレクションで実装します。
+     *
+     * @param intent
+     * @return
+     */
+    private static ClipData getClipData(Intent intent) {
+        // APIレベル16以上
+        //ClipData clipData = intent.getClipData();
+
+        ClipData clipData = null;
+        try {
+            Method method = Intent.class.getMethod("getClipData");
+            if (method != null) {
+                Object result = method.invoke(intent);
+                if (result instanceof ClipData) {
+                    clipData = (ClipData) result;
+                }
+            }
+        } catch (NoSuchMethodException e) {
+            // APIレベル15以下では当例外が発生
+            clipData = null;
+        } catch (IllegalAccessException e) {
+            Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。" + e.getMessage());
+        } catch (InvocationTargetException e) {
+            Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。" + e.getMessage());
+        }
+        return clipData;
+    }
+
     private String getExtrasStr(Intent intent) {
         Bundle extras = intent.getExtras();
         ArrayList<CharSequence> keys = new ArrayList<CharSequence>();
