@@ -202,7 +202,7 @@ public class RecvActivity extends Activity {
             // 標準アプリであれば起動します。
             if (shareActivity.getStandardFlag()) {
                 Log.d(TAG, "標準アプリを起動します。shareActivity=[" + ToStringBuilder.reflectionToString(shareActivity) + "]");
-                view.callOnClick();
+                startStandardShareActivity(view);
             }
         }
     }
@@ -236,6 +236,16 @@ public class RecvActivity extends Activity {
         v.startAnimation(animation);
 
         // アクティビティを起動します。
+        startShareActivity(v);
+    }
+
+    private void startStandardShareActivity(View v) {
+        // アクティビティを起動します。
+        startShareActivity(v);
+    }
+
+    private void startShareActivity(View v) {
+        // アクティビティを起動します。
         ShareActivity shareActivity = (ShareActivity) v.getTag();
         ResolveInfo info = shareActivity.getResolveInfo();
         Intent intent = mIntentService.createIntent();
@@ -260,9 +270,7 @@ public class RecvActivity extends Activity {
         mShareHistoryService.deleteOld();
 
         // ステータスバーに通知（Notification）を登録します。
-        if (PreferenceHelper.getNotificationFlag(this)) {
-            new NotificationHelper(getBaseContext()).notifyIntentSended();
-        }
+        new NotificationHelper(getBaseContext()).notifyIntentSendedIfNeed();
     }
 
 }

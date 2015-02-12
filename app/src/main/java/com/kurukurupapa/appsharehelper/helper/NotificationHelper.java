@@ -23,18 +23,37 @@ public class NotificationHelper {
         mNotificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
     }
 
+    public void notifyIntentSendedIfNeed() {
+        if (PreferenceHelper.getNotificationFlag(mContext)) {
+            notifyIntentSended();
+        }
+    }
+
     public void notifyIntentSended() {
         Intent intent = new Intent(mContext, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
-        Notification notification = new Notification.Builder(mContext)
-                // ステータスバーのアイコン
-                .setSmallIcon(R.drawable.ic_status_bar)
-                .setContentTitle(mContext.getString(R.string.app_name))
-                .setContentText(mContext.getString(R.string.msg_intent_send))
-                .setContentIntent(pendingIntent)
-                // タップされたときに消去
-                .setAutoCancel(true)
-                .build();
+
+        // APIレベル16以上
+//        Notification notification = new Notification.Builder(mContext)
+//                // ステータスバーのアイコン
+//                .setSmallIcon(R.drawable.ic_status_bar)
+//                .setContentTitle(mContext.getString(R.string.app_name))
+//                .setContentText(mContext.getString(R.string.msg_intent_send))
+//                .setContentIntent(pendingIntent)
+//                // タップされたときに消去
+//                .setAutoCancel(true)
+//                .build();
+        // APIレベル14以上
+        Notification notification = new Notification(
+                R.drawable.ic_status_bar,
+                mContext.getString(R.string.app_name),
+                System.currentTimeMillis());
+        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+        notification.setLatestEventInfo(mContext,
+                mContext.getString(R.string.app_name),
+                mContext.getString(R.string.msg_intent_send),
+                pendingIntent);
+
         mNotificationManager.notify(ID_INTENT_SENDED, notification);
     }
 
