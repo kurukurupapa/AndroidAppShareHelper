@@ -64,16 +64,17 @@ public class IntentService {
 
     public String getShortIntentStr() {
         ArrayList<String> lines = new ArrayList<String>();
-        ClipData clipData = getClipData(mIntent);
-        if (clipData != null) {
-            lines.add(getClipDataStr(clipData));
-        }
         if (mIntent.getData() != null) {
             lines.add(mIntent.getDataString());
         }
-        if (lines.size() == 0) {
-            if (mIntent.getExtras() != null) {
-                lines.add(getExtrasStr(mIntent));
+        for (String item : getClipDataStrList(mIntent)) {
+            if (!lines.contains(item)) {
+                lines.add(item);
+            }
+        }
+        for (String item : getExtrasStrList(mIntent)) {
+            if (!lines.contains(item)) {
+                lines.add(item);
             }
         }
         return StringUtils.join(lines, "\n");
@@ -85,22 +86,26 @@ public class IntentService {
                 ;
     }
 
-    private String getClipDataStr(ClipData clipData) {
+    private ArrayList<String> getClipDataStrList(Intent intent) {
+        return getClipDataStrList(getClipData(intent));
+    }
+
+    private ArrayList<String> getClipDataStrList(ClipData clipData) {
 //        String clipDataStr = ToStringBuilder.reflectionToString(clipData, ToStringStyle.SIMPLE_STYLE);
 //        Log.d(TAG, "ClipData=" + clipDataStr);
 //        return clipDataStr;
 
-        ArrayList<CharSequence> lines = new ArrayList<CharSequence>();
+        ArrayList<String> lines = new ArrayList<String>();
         if (clipData != null) {
 //            Log.d(TAG, "ClipData Description=" + ToStringBuilder.reflectionToString(clipData.getDescription()));
             for (int i = 0; i < clipData.getItemCount(); i++) {
                 ClipData.Item item = clipData.getItemAt(i);
 //                Log.d(TAG, "ClipData Item " + i + "=" + ToStringBuilder.reflectionToString(item));
 //                Log.d(TAG, "ClipData Item String " + i + "=" + item.getText());
-                lines.add(item.getText());
+                lines.add(item.getText().toString());
             }
         }
-        return StringUtils.join(lines, "\n");
+        return lines;
     }
 
     /**
@@ -136,16 +141,18 @@ public class IntentService {
         return clipData;
     }
 
-    private String getExtrasStr(Intent intent) {
+    private ArrayList<String> getExtrasStrList(Intent intent) {
+        ArrayList<String> items = new ArrayList<String>();
         Bundle extras = intent.getExtras();
-        ArrayList<CharSequence> keys = new ArrayList<CharSequence>();
         if (extras != null) {
-            Set<String> keySet = extras.keySet();
-            for (String key : keySet) {
-                keys.add(key);
+            for (String key : extras.keySet()) {
+                Object value = extras.get(key);
+                if (value instanceof String) {
+                    items.add(value.toString());
+                }
             }
         }
-        return mContext.getString(R.string.label_extra_key) + " " + StringUtils.join(keys, ", ");
+        return items;
     }
 
     public void findSrcAppInfo() {
