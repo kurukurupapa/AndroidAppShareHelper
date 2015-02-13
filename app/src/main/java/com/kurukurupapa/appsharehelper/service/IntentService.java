@@ -134,9 +134,9 @@ public class IntentService {
             // APIレベル15以下では当例外が発生
             clipData = null;
         } catch (IllegalAccessException e) {
-            Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。" + e.getMessage());
+            Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。", e);
         } catch (InvocationTargetException e) {
-            Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。" + e.getMessage());
+            Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。", e);
         }
         return clipData;
     }

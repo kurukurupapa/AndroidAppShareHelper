@@ -56,20 +56,27 @@ public class ShareHistoryService {
             int contentIndex = cursor.getColumnIndex(ShareHistory.COLUMN_CONTENT);
             boolean loop = cursor.moveToFirst();
             while (loop) {
-                ShareHistory shareHistory = new ShareHistory(
-                        cursor.getLong(idIndex),
-                        cursor.getLong(timestampIndex),
-                        cursor.getLong(shareActivityIdIndex),
-                        cursor.getString(contentIndex)
-                );
-                list.add(shareHistory);
-                loop = cursor.moveToNext();
-            }
+                try {
+                    ShareHistory shareHistory = new ShareHistory(
+                            cursor.getLong(idIndex),
+                            cursor.getLong(timestampIndex),
+                            cursor.getLong(shareActivityIdIndex),
+                            cursor.getString(contentIndex)
+                    );
 
-            // 共有アクティビティデータの紐づけ
-            for (ShareHistory shareHistory : list) {
-                ShareActivity shareActivity = mShareActivityService.findById(shareHistory.getShareActivityId());
-                shareHistory.setShareActivity(shareActivity);
+                    // 共有アクティビティデータの紐づけ
+                    ShareActivity shareActivity = mShareActivityService.findById(shareHistory.getShareActivityId());
+                    shareHistory.setShareActivity(shareActivity);
+
+                    // リストへ追加
+                    list.add(shareHistory);
+                }
+                catch (Exception e) {
+                    Log.w(TAG, "ShareHistory,ShareActivityテーブルの検索に失敗しました。", e);
+                }
+
+                // 次のループへ
+                loop = cursor.moveToNext();
             }
         }
         finally {
