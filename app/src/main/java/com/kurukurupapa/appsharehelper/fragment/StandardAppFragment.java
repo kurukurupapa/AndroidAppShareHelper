@@ -14,11 +14,13 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.kurukurupapa.appsharehelper.R;
+import com.kurukurupapa.appsharehelper.helper.DbHelper;
 import com.kurukurupapa.appsharehelper.helper.PreferenceHelper;
 import com.kurukurupapa.appsharehelper.helper.StandardAppArrayAdapter;
 import com.kurukurupapa.appsharehelper.model.ShareActivity;
 import com.kurukurupapa.appsharehelper.model.dummy.DummyContent;
 import com.kurukurupapa.appsharehelper.service.ShareActivityService;
+import com.kurukurupapa.appsharehelper.service.ShareActivityTableService;
 
 import java.util.List;
 
@@ -45,6 +47,8 @@ public class StandardAppFragment extends ListFragment {
 
     private OnFragmentInteractionListener mListener;
 
+    private DbHelper mDbHelper;
+    private ShareActivityTableService mShareActivityTableService;
     private ShareActivityService mShareActivityService;
     private StandardAppArrayAdapter mAdapter;
 
@@ -75,7 +79,9 @@ public class StandardAppFragment extends ListFragment {
         }
 
         // オブジェクト生成
-        mShareActivityService = new ShareActivityService(getActivity());
+        mDbHelper = new DbHelper(getActivity());
+        mShareActivityTableService = new ShareActivityTableService(mDbHelper);
+        mShareActivityService = new ShareActivityService(getActivity(), mShareActivityTableService);
     }
 
     @Override

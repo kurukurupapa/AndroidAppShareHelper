@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,12 +20,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kurukurupapa.appsharehelper.R;
+import com.kurukurupapa.appsharehelper.helper.DbHelper;
 import com.kurukurupapa.appsharehelper.helper.NotificationHelper;
 import com.kurukurupapa.appsharehelper.helper.PreferenceHelper;
-import com.kurukurupapa.appsharehelper.model.ShareActivity;
+import com.kurukurupapa.appsharehelper.helper.ShareActivityAdapter;
 import com.kurukurupapa.appsharehelper.model.ShareHistory;
 import com.kurukurupapa.appsharehelper.service.IntentService;
 import com.kurukurupapa.appsharehelper.service.ShareActivityService;
+import com.kurukurupapa.appsharehelper.service.ShareActivityTableService;
 import com.kurukurupapa.appsharehelper.service.ShareHistoryService;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -40,7 +41,9 @@ public class RecvActivity extends Activity {
     private static final String TAG = RecvActivity.class.getSimpleName();
     private static final String KEY_SRC_PACKAGE_NAME = "src_package_name";
 
+    private DbHelper mDbHelper;
     private IntentService mIntentService;
+    private ShareActivityTableService mShareActivityTableService;
     private ShareActivityService mShareActivityService;
     private ShareHistoryService mShareHistoryService;
 
@@ -61,9 +64,11 @@ public class RecvActivity extends Activity {
         setContentView(R.layout.activity_recv);
 
         // オブジェクト生成
+        mDbHelper = new DbHelper(this);
         mIntentService = new IntentService(this);
-        mShareActivityService = new ShareActivityService(this);
-        mShareHistoryService = new ShareHistoryService(this);
+        mShareActivityTableService = new ShareActivityTableService(mDbHelper);
+        mShareActivityService = new ShareActivityService(this, mShareActivityTableService);
+        mShareHistoryService = new ShareHistoryService(mDbHelper);
 
         // UIオブジェクト取得
         mRootLayout = (RelativeLayout) findViewById(R.id.root_layout);
@@ -176,19 +181,26 @@ public class RecvActivity extends Activity {
         mDestLinearLayout.removeAllViews();
 
         // アクティビティ一覧を取得します。
-        List<ShareActivity> shareActivityList = mShareActivityService.find(mIntentService.getSrcPackageName(), mIntentService.getIntent());
+        List<ShareActivityAdapter> shareActivityList = mShareActivityService.find(mIntentService.getSrcPackageName(), mIntentService.getIntent());
 
         // ListViewに、アクティビティ表示/起動用のViewを追加します。
         PackageManager pm = this.getPackageManager();
         LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        for (ShareActivity shareActivity : shareActivityList) {
+        for (ShareActivityAdapter shareActivity : shareActivityList) {
             View view = layoutInflater.inflate(R.layout.item_activity, null);
             ImageView iconImageView = (ImageView) view.findViewById(R.id.icon_image_view);
             TextView labelTextView = (TextView) view.findViewById(R.id.label_text_view);
+            TextView detailTextView = (TextView) view.findViewById(R.id.detail_text_view);
 
-            iconImageView.setImageDrawable(shareActivity.getResolveInfo().activityInfo.loadIcon(pm));
-            labelTextView.setText(shareActivity.getResolveInfo().activityInfo.loadLabel(pm));
+            // アイコン
+            iconImageView.setImageDrawable(shareActivity.loadDestActivityIcon());
 
+            // ラベルと詳細情報
+            labelTextView.setText(shareActivity.loadDestActivityLabel());
+            detailTextView.setText(shareActivity.getStartIntent().getAction() + "\n" + shareActivity.getTimestampStr());
+            detailTextView.setVisibility(mDevSwitch.isChecked() ? View.VISIBLE : View.GONE);
+
+            // タッチ時処理
             view.setTag(shareActivity);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -216,6 +228,7 @@ public class RecvActivity extends Activity {
     private void onDevSwitchCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         setIntentValueTextView(isChecked);
         mIntentValueTextView.startAnimation(mViewChangeAnimation);
+        setDestActivityDetailTextView(isChecked);
     }
 
     private void setIntentValueTextView(boolean isChecked) {
@@ -223,6 +236,13 @@ public class RecvActivity extends Activity {
             mIntentValueTextView.setText(mIntentService.getLongIntentStr());
         } else {
             mIntentValueTextView.setText(mIntentService.getShortIntentStr());
+        }
+    }
+
+    private void setDestActivityDetailTextView(boolean isChecked) {
+        for (int i = 0; i < mDestLinearLayout.getChildCount(); i++) {
+            TextView detailTextView = (TextView) mDestLinearLayout.getChildAt(i).findViewById(R.id.detail_text_view);
+            detailTextView.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -246,11 +266,8 @@ public class RecvActivity extends Activity {
 
     private void startShareActivity(View v) {
         // アクティビティを起動します。
-        ShareActivity shareActivity = (ShareActivity) v.getTag();
-        ResolveInfo info = shareActivity.getResolveInfo();
-        Intent intent = mIntentService.createIntent();
-        intent.setClassName(info.activityInfo.packageName, info.activityInfo.name);
-        startActivity(intent);
+        ShareActivityAdapter shareActivity = (ShareActivityAdapter) v.getTag();
+        startActivity(shareActivity.createIntent());
 
         // 当アクティビティを終了しておきます。
         // これにより、遷移先アクティビティでバックボタンクリック時に、当アクティビティを表示しなくなります。
@@ -263,7 +280,7 @@ public class RecvActivity extends Activity {
         mShareActivityService.updateOrInsert(shareActivity);
 
         // 共有履歴をDB登録します。
-        ShareHistory shareHistory = new ShareHistory(shareActivity, mIntentService.getShortIntentStr());
+        ShareHistory shareHistory = new ShareHistory(shareActivity.getShareActivity(), mIntentService.getShortIntentStr());
         mShareHistoryService.insert(shareHistory);
 
         // 古い共有履歴を削除します。

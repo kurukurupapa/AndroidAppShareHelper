@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * インテント受信に関するサービスクラスです。
@@ -62,12 +61,16 @@ public class IntentService {
         intentChangedFlag = false;
     }
 
+    /**
+     * インテントの概要を取得します。一般ユーザ向け。
+     * @return 文字列
+     */
     public String getShortIntentStr() {
         ArrayList<String> lines = new ArrayList<String>();
         if (mIntent.getData() != null) {
             lines.add(mIntent.getDataString());
         }
-        for (String item : getClipDataStrList(mIntent)) {
+        for (String item : getClipDataShortStrList(mIntent)) {
             if (!lines.contains(item)) {
                 lines.add(item);
             }
@@ -77,20 +80,28 @@ public class IntentService {
                 lines.add(item);
             }
         }
+        // テキストが見つからなかった場合のメッセージ
+        if (lines.size() == 0) {
+            lines.add(mContext.getString(R.string.msg_no_intent_text));
+        }
         return StringUtils.join(lines, "\n");
     }
 
+    /**
+     * インテントの詳細情報を取得します。開発者向け。
+     * @return 文字列
+     */
     public String getLongIntentStr() {
         return ""
                 + ToStringBuilder.reflectionToString(mIntent, new IntentToStringStyle()) + "\n"
                 ;
     }
 
-    private ArrayList<String> getClipDataStrList(Intent intent) {
-        return getClipDataStrList(getClipData(intent));
+    private ArrayList<String> getClipDataShortStrList(Intent intent) {
+        return getClipDataShortStrList(getClipData(intent));
     }
 
-    private ArrayList<String> getClipDataStrList(ClipData clipData) {
+    private ArrayList<String> getClipDataShortStrList(ClipData clipData) {
 //        String clipDataStr = ToStringBuilder.reflectionToString(clipData, ToStringStyle.SIMPLE_STYLE);
 //        Log.d(TAG, "ClipData=" + clipDataStr);
 //        return clipDataStr;
@@ -102,7 +113,12 @@ public class IntentService {
                 ClipData.Item item = clipData.getItemAt(i);
 //                Log.d(TAG, "ClipData Item " + i + "=" + ToStringBuilder.reflectionToString(item));
 //                Log.d(TAG, "ClipData Item String " + i + "=" + item.getText());
-                lines.add(item.getText().toString());
+
+                // ひとまずtextのみを対象とします。
+                // html, uri, intentは無視します。
+                if (item.getText() != null) {
+                    lines.add(item.getText().toString());
+                }
             }
         }
         return lines;
@@ -114,8 +130,8 @@ public class IntentService {
      * Intent#getCliplData()で取得できますが、APIレベル16(Android 4.1)以上のAPIです。
      * APIレベル14(Android 4.0)でも動作させるため、リフレクションで実装します。
      *
-     * @param intent
-     * @return
+     * @param intent Intentオブジェクト
+     * @return ClipDataオブジェクト
      */
     private static ClipData getClipData(Intent intent) {
         // APIレベル16以上
@@ -135,8 +151,10 @@ public class IntentService {
             clipData = null;
         } catch (IllegalAccessException e) {
             Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。", e);
+            clipData = null;
         } catch (InvocationTargetException e) {
             Log.w(TAG, "Intent#getClipDataメソッド実行に失敗しました。", e);
+            clipData = null;
         }
         return clipData;
     }

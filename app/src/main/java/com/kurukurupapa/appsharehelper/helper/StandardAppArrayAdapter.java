@@ -58,7 +58,7 @@ public class StandardAppArrayAdapter extends ArrayAdapter<ShareActivity> {
         TextView actionTypeTextView = (TextView) convertView.findViewById(R.id.action_type_text_view);
         Switch standardSwitch = (Switch) convertView.findViewById(R.id.standard_switch);
 
-        ShareActivityHelper helper = new ShareActivityHelper(shareActivity, getContext());
+        ShareActivityAdapter helper = new ShareActivityAdapter(shareActivity, getContext(), getContext().getPackageManager(), null, null, null);
         srcImageView.setImageDrawable(helper.loadSrcPackageIcon());
         srcTextView.setText(helper.loadSrcPackageLabel());
         destImageView.setImageDrawable(helper.loadDestActivityIcon());

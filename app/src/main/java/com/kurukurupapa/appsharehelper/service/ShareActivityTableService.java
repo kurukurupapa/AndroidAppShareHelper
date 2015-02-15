@@ -1,18 +1,12 @@
 package com.kurukurupapa.appsharehelper.service;
 
-import android.content.ComponentName;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.kurukurupapa.appsharehelper.activity.ClipActivity;
 import com.kurukurupapa.appsharehelper.helper.DbHelper;
-import com.kurukurupapa.appsharehelper.helper.ShareActivityAdapter;
 import com.kurukurupapa.appsharehelper.model.ShareActivity;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -20,130 +14,35 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * 共有アクティビティサービスクラス
  *
  * 共有アクティビティデータにアクセスするサービスです。
  */
-public class ShareActivityService {
-    private static final String TAG = ShareActivityService.class.getSimpleName();
+public class ShareActivityTableService {
+    private static final String TAG = ShareActivityTableService.class.getSimpleName();
 
-    private Context mContext;
-    private PackageManager mPackageManager;
     private DbHelper mDbHelper;
 
-    public ShareActivityService(DbHelper dbHelper, Context context) {
-        mContext = context;
-        mPackageManager = mContext.getPackageManager();
+    public ShareActivityTableService(DbHelper dbHelper) {
         mDbHelper = dbHelper;
     }
 
-    public ShareActivity findById(long shareActivityId) {
+    public ShareActivity findByIdOrNull(long shareActivityId) {
+        List<ShareActivity> list = query(ShareActivity._ID + "=" + shareActivityId, ShareActivity._ID);
+        if (list.size() != 1) {
+            return null;
+        }
+        return list.get(0);
+    }
+
+    public ShareActivity findByIdOrThrow(long shareActivityId) {
         List<ShareActivity> list = query(ShareActivity._ID + "=" + shareActivityId, ShareActivity._ID);
         if (list.size() != 1) {
             throw new RuntimeException("ShareActivityデータの検索に失敗しました。count=" + list.size());
         }
         return list.get(0);
-    }
-
-    /**
-     * インテント受信可能なアクティビティ一覧を取得します。
-     * @param srcPackage インテント呼び出し元アプリのパッケージ
-     * @param srcIntent インテント
-     * @return リスト
-     */
-    public List<ShareActivityAdapter> find(String srcPackage, Intent srcIntent) {
-        List<ShareActivityAdapter> resultShareActivityList = new ArrayList<ShareActivityAdapter>();
-
-        // 共有先アクティビティ候補一覧を取得します。
-        TreeMap<ComponentName, ShareActivityAdapter> allShareActivities = getAllShareActivities(srcPackage, srcIntent);
-
-        // DBからアクティビティ使用履歴を取得します。
-        List<ShareActivity> shareActivityList = query(srcPackage, srcIntent);
-
-        // 優先順位を考慮しながら結果リストを作成します。
-        // 優先１：DB登録されている（過去に使用された）アクティビティを結果リストに追加します。
-        for (ShareActivity shareActivity : shareActivityList) {
-            String packageName = shareActivity.getDestPackage();
-            String activity = shareActivity.getDestActivity();
-            ComponentName componentName = new ComponentName(packageName, activity);
-
-            // DB登録されていたアクティビティが、候補一覧に存在することを確認します。
-            ShareActivityAdapter targetShareActivity = allShareActivities.get(componentName);
-            if (targetShareActivity == null) {
-                // DBのアクティビティ一覧に存在し、候補一覧に存在しなかったアクティビティは、アンインストールされたと考えます。
-                // DBの該当データは不要なので、削除します。
-                delete(shareActivity);
-            } else {
-                // 結果リストへ登録します。
-                targetShareActivity.setShareActivity(shareActivity);
-                resultShareActivityList.add(targetShareActivity);
-                allShareActivities.remove(componentName);
-            }
-        }
-        // 優先２：使われたことのないアクティビティを結果リストに追加します。
-        resultShareActivityList.addAll(allShareActivities.values());
-
-        return resultShareActivityList;
-    }
-
-    private TreeMap<ComponentName, ShareActivityAdapter> getAllShareActivities(String srcPackage, Intent srcIntent) {
-        TreeMap<ComponentName, ShareActivityAdapter> shareActivities = new TreeMap<ComponentName, ShareActivityAdapter>();
-        shareActivities.putAll(getMyselfShareActivities(srcPackage, srcIntent));
-        shareActivities.putAll(getResolveShareActivities(srcPackage, srcIntent));
-        return shareActivities;
-    }
-
-    private TreeMap<ComponentName, ShareActivityAdapter> getMyselfShareActivities(String srcPackage, Intent srcIntent) {
-        TreeMap<ComponentName, ShareActivityAdapter> shareActivities = new TreeMap<ComponentName, ShareActivityAdapter>();
-
-        // 当アプリ内の共有先アクティビティ
-        ComponentName componentName = new ComponentName(mContext.getPackageName(), ClipActivity.class.getName());
-        ShareActivity shareActivity = new ShareActivity(srcPackage, srcIntent, componentName);
-        ShareActivityAdapter shareActivityAdapter = new ShareActivityAdapter(shareActivity, mContext, mPackageManager, null, null, srcIntent);
-        shareActivities.put(componentName, shareActivityAdapter);
-
-        return shareActivities;
-    }
-
-    private TreeMap<ComponentName, ShareActivityAdapter> getResolveShareActivities(String srcPackage, Intent srcIntent) {
-        TreeMap<ComponentName, ShareActivityAdapter> shareActivities = new TreeMap<ComponentName, ShareActivityAdapter>();
-
-        // PackageMangerからアクティビティ一覧を取得します。
-        List<ResolveInfo> tmpResolveInfoList = getResolveInfoList(srcIntent);
-
-//        Intent tmpIntent = new Intent(srcIntent);
-//        tmpIntent.setAction(Intent.ACTION_SEND);
-//        tmpIntent.setType("text/plain");
-//        List<ResolveInfo> tmpResolveInfoList = getResolveInfoList(tmpIntent);
-
-        for (ResolveInfo resolveInfo : tmpResolveInfoList) {
-            if (resolveInfo.activityInfo.packageName.equals(mContext.getPackageName())) {
-                // 当アプリのアクティビティは無視します。
-                continue;
-            }
-            ComponentName componentName = new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name);
-            ShareActivity shareActivity = new ShareActivity(srcPackage, srcIntent, componentName);
-            ShareActivityAdapter shareActivityAdapter = new ShareActivityAdapter(shareActivity, mContext, mPackageManager, null, resolveInfo.activityInfo, srcIntent);
-            shareActivities.put(componentName, shareActivityAdapter);
-        }
-
-        return shareActivities;
-    }
-
-    /**
-     * インテント受信可能なアクティビティ一覧を取得します。
-     * @return ResolveInfoオブジェクトのリスト
-     */
-    private List<ResolveInfo> getResolveInfoList(Intent srcIntent) {
-        ArrayList<String> actions = new ArrayList<String>();
-        Intent intent = new Intent(srcIntent);
-        intent.setComponent(null);
-        List<ResolveInfo> list = mPackageManager.queryIntentActivities(intent, 0);
-        Log.d(TAG, "queryIntentActivities結果 件数=" + list.size());
-        return list;
     }
 
     public void updateOrInsert(ShareActivity shareActivity) {
@@ -176,7 +75,7 @@ public class ShareActivityService {
      * @param srcIntent インテント
      * @return 共有アクティビティリスト
      */
-    private List<ShareActivity> query(String srcPackage, Intent srcIntent) {
+    public List<ShareActivity> query(String srcPackage, Intent srcIntent) {
         return query(
                 ShareActivity.COLUMN_SRC_PACKAGE + "='" + srcPackage + "' and " +
                 ShareActivity.COLUMN_ACTION + "='" + srcIntent.getAction() + "' and " +
@@ -228,7 +127,7 @@ public class ShareActivityService {
         return list;
     }
 
-    private void insert(ShareActivity shareActivity) {
+    public void insert(ShareActivity shareActivity) {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         try {
             ContentValues values = shareActivity.createContentValues();
@@ -261,7 +160,7 @@ public class ShareActivityService {
         }
     }
 
-    private void delete(ShareActivity shareActivity) {
+    public void delete(ShareActivity shareActivity) {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         try {
             Log.d(TAG, "ShareActivityテーブル削除 shareActivity=[" + ToStringBuilder.reflectionToString(shareActivity, ToStringStyle.SHORT_PREFIX_STYLE) + "]");

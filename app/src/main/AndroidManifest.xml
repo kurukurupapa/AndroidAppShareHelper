@@ -94,6 +94,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <!-- クリップボードアクティビティ -->
+        <activity
+            android:name=".activity.ClipActivity"
+            android:label="@string/title_activity_clip" >
+        </activity>
     </application>
 
 </manifest>

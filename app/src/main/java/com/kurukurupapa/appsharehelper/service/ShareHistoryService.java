@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.kurukurupapa.appsharehelper.helper.DbHelper;
+import com.kurukurupapa.appsharehelper.helper.ShareHistoryAdapter;
 import com.kurukurupapa.appsharehelper.model.ShareActivity;
 import com.kurukurupapa.appsharehelper.model.ShareHistory;
 
@@ -27,21 +28,29 @@ public class ShareHistoryService {
     private static final int REMAIN_DAYS = 10;
     private static final long REMAIN_MILLS = REMAIN_DAYS * ONE_DAY_AS_MILLS;
 
-    private Context mContext;
     private DbHelper mDbHelper;
-    private ShareActivityService mShareActivityService;
 
-    public ShareHistoryService(Context context) {
-        mContext = context;
-        mDbHelper = new DbHelper(context);
-        mShareActivityService = new ShareActivityService(context);
+    public ShareHistoryService(DbHelper dbHelper) {
+        mDbHelper = dbHelper;
     }
 
     /**
      * 共有履歴データ一覧を取得します。
      * @return リスト
      */
-    public List<ShareHistory> query() {
+    public List<ShareHistoryAdapter> find(ShareActivityCacheService shareActivityCacheService, Context context) {
+        List<ShareHistoryAdapter> list = new ArrayList<ShareHistoryAdapter>();
+        for (ShareHistory shareHistory : query()) {
+            list.add(new ShareHistoryAdapter(shareHistory, shareActivityCacheService, context));
+        }
+        return list;
+    }
+
+    /**
+     * 共有履歴データ一覧を取得します。
+     * @return リスト
+     */
+    private List<ShareHistory> query() {
         List<ShareHistory> list = new ArrayList<ShareHistory>();
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         try {
@@ -56,26 +65,13 @@ public class ShareHistoryService {
             int contentIndex = cursor.getColumnIndex(ShareHistory.COLUMN_CONTENT);
             boolean loop = cursor.moveToFirst();
             while (loop) {
-                try {
-                    ShareHistory shareHistory = new ShareHistory(
-                            cursor.getLong(idIndex),
-                            cursor.getLong(timestampIndex),
-                            cursor.getLong(shareActivityIdIndex),
-                            cursor.getString(contentIndex)
-                    );
-
-                    // 共有アクティビティデータの紐づけ
-                    ShareActivity shareActivity = mShareActivityService.findById(shareHistory.getShareActivityId());
-                    shareHistory.setShareActivity(shareActivity);
-
-                    // リストへ追加
-                    list.add(shareHistory);
-                }
-                catch (Exception e) {
-                    Log.w(TAG, "ShareHistory,ShareActivityテーブルの検索に失敗しました。", e);
-                }
-
-                // 次のループへ
+                ShareHistory shareHistory = new ShareHistory(
+                        cursor.getLong(idIndex),
+                        cursor.getLong(timestampIndex),
+                        cursor.getLong(shareActivityIdIndex),
+                        cursor.getString(contentIndex)
+                );
+                list.add(shareHistory);
                 loop = cursor.moveToNext();
             }
         }

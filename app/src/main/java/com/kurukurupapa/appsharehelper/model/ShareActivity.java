@@ -1,8 +1,8 @@
 package com.kurukurupapa.appsharehelper.model;
 
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.ResolveInfo;
 import android.provider.BaseColumns;
 
 /**
@@ -22,7 +22,7 @@ public class ShareActivity implements BaseColumns {
     public static final String COLUMN_TIMESTAMP2 = "timestamp2";
     public static final String COLUMN_TIMESTAMP3 = "timestamp3";
     public static final String COLUMN_STANDARD_FLAG = "standard_flag";
-    public static final int NO_ID = -1;
+    public static final long NO_ID = -1;
 
     /** ID */
     private long mId;
@@ -52,21 +52,20 @@ public class ShareActivity implements BaseColumns {
     /** 標準アプリフラグ */
     private boolean mStandardFlag;
 
-    /** ResolveInfoオブジェクト */
-    private ResolveInfo mResolveInfo;
+    public ShareActivity(String srcPackage, Intent intent, ComponentName destComponentName) {
+        this(srcPackage, intent, destComponentName.getPackageName(), destComponentName.getClassName());
+    }
 
-    public ShareActivity(String srcPackage, Intent intent, ResolveInfo resolveInfo) {
-        this(NO_ID, srcPackage, intent.getAction(), intent.getType(),
-                resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name,
-                0, 0, 0, 0, false, resolveInfo);
+    public ShareActivity(String srcPackage, Intent intent, String destPackage, String destActivity) {
+        this(NO_ID, srcPackage, intent.getAction(), intent.getType(), destPackage, destActivity,
+                0, 0, 0, 0, false);
     }
 
     public ShareActivity(long id,
                          String srcPackage, String action, String type,
                          String destPackage, String destActivity,
                          long timestamp, long timestamp1, long timestamp2, long timestamp3,
-                         boolean standardFlag,
-                         ResolveInfo resolveInfo) {
+                         boolean standardFlag) {
         mId = id;
         mSrcPackage = srcPackage;
         mAction = action;
@@ -78,7 +77,6 @@ public class ShareActivity implements BaseColumns {
         mTimestamp2 = timestamp2;
         mTimestamp3 = timestamp3;
         mStandardFlag = standardFlag;
-        mResolveInfo = resolveInfo;
     }
 
     public long getId() {
@@ -153,14 +151,6 @@ public class ShareActivity implements BaseColumns {
     }
     public void setStandardFlag(boolean standardFlag) {
         mStandardFlag = standardFlag;
-    }
-
-    public ResolveInfo getResolveInfo() {
-        return mResolveInfo;
-    }
-
-    public void setResolveInfo(ResolveInfo resolveInfo) {
-        mResolveInfo = resolveInfo;
     }
 
     public boolean isNew() {

@@ -4,4 +4,6 @@
     <color name="scheme_base_light">#ffffff</color>
     <color name="scheme_main">#0099cc</color>
     <color name="scheme_accent">#ff8800</color>
+    <color name="scheme_text">#000000</color>
+    <color name="scheme_text_light">#bdbdbd</color>
 </resources>

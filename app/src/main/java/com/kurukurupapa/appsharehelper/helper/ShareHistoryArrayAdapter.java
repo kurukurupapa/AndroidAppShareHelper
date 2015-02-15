@@ -1,6 +1,8 @@
 package com.kurukurupapa.appsharehelper.helper;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,7 @@ import android.widget.TextView;
 import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.model.ShareActivity;
 import com.kurukurupapa.appsharehelper.model.ShareHistory;
+import com.kurukurupapa.appsharehelper.service.ShareActivityCacheService;
 
 import java.util.List;
 
@@ -20,12 +23,14 @@ import java.util.List;
  *
  * 共有履歴データをリストビュー表示するためのアダプターです。
  */
-public class ShareHistoryArrayAdapter extends ArrayAdapter<ShareHistory> {
+public class ShareHistoryArrayAdapter extends ArrayAdapter<ShareHistoryAdapter> {
+    private static final String TAG = ShareHistoryArrayAdapter.class.getSimpleName();
+
     private final LayoutInflater mLayoutInflater;
     private int mPosition;
     private boolean mDevFlag;
 
-    public ShareHistoryArrayAdapter(Context context, List<ShareHistory> objects) {
+    public ShareHistoryArrayAdapter(Context context, List<ShareHistoryAdapter> objects) {
         super(context, 0, objects);
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -43,7 +48,7 @@ public class ShareHistoryArrayAdapter extends ArrayAdapter<ShareHistory> {
         }
 
         // 当該行のデータを取得します。
-        ShareHistory shareHistory = getItem(position);
+        ShareHistoryAdapter shareHistory = getItem(position);
 
         // Viewオブジェクトを設定します。
         TextView timestampTextView = (TextView) convertView.findViewById(R.id.timestamp_text_view);
@@ -53,19 +58,17 @@ public class ShareHistoryArrayAdapter extends ArrayAdapter<ShareHistory> {
         TextView destTextView = (TextView) convertView.findViewById(R.id.dest_text_view);
         TextView contentTextView = (TextView) convertView.findViewById(R.id.content_text_view);
 
-        ShareActivity shareActivity = shareHistory.getShareActivity();
-        ShareActivityHelper helper = new ShareActivityHelper(shareActivity, getContext());
-        timestampTextView.setText(shareHistory.getTimestampStr(getContext()));
-        srcImageView.setImageDrawable(helper.loadSrcPackageIcon());
-        srcTextView.setText(helper.loadSrcPackageLabel());
-        destImageView.setImageDrawable(helper.loadDestActivityIcon());
-        destTextView.setText(helper.loadDestActivityLabel());
+        timestampTextView.setText(shareHistory.getTimestampStr());
+        srcImageView.setImageDrawable(shareHistory.loadSrcPackageIcon());
+        srcTextView.setText(shareHistory.loadSrcPackageLabel());
+        destImageView.setImageDrawable(shareHistory.loadDestActivityIcon());
+        destTextView.setText(shareHistory.loadDestActivityLabel());
 
-        String content;
+        String content = null;
         if (mDevFlag) {
-            content = shareActivity.getAction() + "\n" + helper.getTypeForDisplay() + "\n" + shareHistory.getContent();
+            content = shareHistory.getLongContent();
         } else {
-            content = shareHistory.getContent();
+            content = shareHistory.getShortContent();
         }
         contentTextView.setText(content);
 

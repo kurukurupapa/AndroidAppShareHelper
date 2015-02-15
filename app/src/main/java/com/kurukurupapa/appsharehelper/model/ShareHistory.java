@@ -28,9 +28,6 @@ public class ShareHistory implements BaseColumns {
     /** インテント内容 */
     private String mContent;
 
-    /** 共有アクティビティデータ */
-    private ShareActivity mShareActivity;
-
     public ShareHistory(ShareActivity shareActivity, String content) {
         this(NO_ID, shareActivity.getTimestamp1(), shareActivity.getId(), content);
     }
@@ -52,10 +49,6 @@ public class ShareHistory implements BaseColumns {
     public long getTimestamp() {
         return mTimestamp;
     }
-    public String getTimestampStr(Context context) {
-        Date date = new Date(mTimestamp);
-        return DateFormat.getDateFormat(context).format(date) + " " + DateFormat.getTimeFormat(context).format(date);
-    }
     public void setTimestamp(long timestamp) {
         mTimestamp = timestamp;
     }
@@ -69,13 +62,6 @@ public class ShareHistory implements BaseColumns {
     }
     public void setContent(String content) {
         mContent = content;
-    }
-
-    public ShareActivity getShareActivity() {
-        return mShareActivity;
-    }
-    public void setShareActivity(ShareActivity shareActivity) {
-        mShareActivity = shareActivity;
     }
 
     public ContentValues createContentValues() {

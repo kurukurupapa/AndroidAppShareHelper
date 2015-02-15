@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">アプリ間共有の助け</string>
     <string name="title_activity_main">アプリ間共有の助け</string>
     <string name="title_activity_recv">アプリを選択</string>
+    <string name="title_activity_clip">クリップボードにコピー</string>
 
     <!-- ナビゲーションドロワー内の項目名 -->
     <string name="title_nav_history">共有履歴</string>
@@ -22,12 +24,15 @@
     <string name="label_dev_switch">開発者向け表示</string>
     <string name="label_standard_app_switch">標準アプリに設定</string>
     <string name="label_extra_key">拡張データ名</string>
+    <string name="label_no_use">未使用</string>
 
     <!-- メッセージ -->
     <string name="msg_no_items">データがありません。</string>
     <string name="msg_share_history_no_items">共有履歴がありません。&lt;br&gt;&lt;br&gt;使い方は&lt;a href=\&quot;https://play.google.com/store/apps/details?id=com.kurukurupapa.appsharehelper\&quot;&gt;こちら&lt;/a&gt;を参照ください。</string>
     <string name="msg_standard_app_no_items">標準アプリの設定がありません。</string>
+    <string name="msg_no_intent_text">テキストデータがありません。</string>
     <string name="msg_intent_send">共有しました。</string>
+    <string name="msg_copy_to_clipboard">クリップボードにコピーしました。</string>
 
     <!-- エラーメッセージ -->
     <string name="msg_err_src_app">共有元アプリの取得に失敗しました。</string>

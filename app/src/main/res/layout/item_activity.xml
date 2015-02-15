@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="@dimen/view_small_margin" >
+    android:paddingTop="@dimen/view_small_margin"
+    android:background="@color/scheme_base_light">
 
     <ImageView
         android:layout_width="@android:dimen/app_icon_size"
@@ -11,11 +12,27 @@
         android:src="@drawable/ic_unknown"
         android:scaleType="fitCenter" />
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="共有先アプリ"
-        android:id="@+id/label_text_view"
         android:layout_gravity="center_vertical"
-        android:paddingLeft="@dimen/view_small_margin" />
+        android:paddingLeft="@dimen/view_small_margin">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="共有先アプリ"
+            android:id="@+id/label_text_view"
+            android:textColor="@color/scheme_text" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="詳細情報"
+            android:id="@+id/detail_text_view"
+            android:textColor="@color/scheme_text_light" />
+    </LinearLayout>
+
 </LinearLayout>
