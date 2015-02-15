@@ -116,6 +116,12 @@ action#android.intent.action.WEB_SEARCH
 ADDED from AndroidManifest.xml:92:17
 	android:name
 		ADDED from AndroidManifest.xml:92:25
+activity#com.kurukurupapa.appsharehelper.activity.ClipActivity
+ADDED from AndroidManifest.xml:99:9
+	android:label
+		ADDED from AndroidManifest.xml:101:13
+	android:name
+		ADDED from AndroidManifest.xml:100:13
 uses-sdk
 INJECTED from AndroidManifest.xml:0:0 reason: use-sdk injection requested
 MERGED from com.android.support:appcompat-v7:21.0.3:15:5
