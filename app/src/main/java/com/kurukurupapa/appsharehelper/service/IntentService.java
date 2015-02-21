@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -35,6 +36,8 @@ public class IntentService {
     private boolean intentChangedFlag;
     private PackageManager mPackageManager;
     private ApplicationInfo mSrcAppInfo;
+    private String mShortIntentStr;
+    private boolean mTextFlag;
 
     public IntentService(Context context) {
         mContext = context;
@@ -50,6 +53,7 @@ public class IntentService {
         mIntent = intent;
         mIntent.setComponent(null);
         intentChangedFlag = true;
+        initShortIntentStr();
         Log.d(TAG, "インテント内容=" + ToStringBuilder.reflectionToString(mIntent));
     }
 
@@ -61,30 +65,48 @@ public class IntentService {
         intentChangedFlag = false;
     }
 
+    public void initShortIntentStr() {
+        mShortIntentStr = null;
+        mTextFlag = false;
+
+        try {
+            ArrayList<String> lines = new ArrayList<String>();
+            if (mIntent.getData() != null) {
+                lines.add(mIntent.getDataString());
+            }
+            for (String item : getClipDataShortStrList(mIntent)) {
+                if (!lines.contains(item)) {
+                    lines.add(item);
+                }
+            }
+            for (String item : getExtrasStrList(mIntent)) {
+                if (!lines.contains(item)) {
+                    lines.add(item);
+                }
+            }
+            if (lines.size() == 0) {
+                // テキストが見つからなかった場合のメッセージ
+                mShortIntentStr = mContext.getString(R.string.msg_no_intent_text);
+            } else {
+                mShortIntentStr = StringUtils.join(lines, "\n");
+                mTextFlag = true;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "共有内容の解析に失敗しました。", e);
+            mShortIntentStr = mContext.getString(R.string.msg_err_intent_str);
+        }
+    }
+
+    public boolean isText() {
+        return mTextFlag;
+    }
+
     /**
      * インテントの概要を取得します。一般ユーザ向け。
      * @return 文字列
      */
     public String getShortIntentStr() {
-        ArrayList<String> lines = new ArrayList<String>();
-        if (mIntent.getData() != null) {
-            lines.add(mIntent.getDataString());
-        }
-        for (String item : getClipDataShortStrList(mIntent)) {
-            if (!lines.contains(item)) {
-                lines.add(item);
-            }
-        }
-        for (String item : getExtrasStrList(mIntent)) {
-            if (!lines.contains(item)) {
-                lines.add(item);
-            }
-        }
-        // テキストが見つからなかった場合のメッセージ
-        if (lines.size() == 0) {
-            lines.add(mContext.getString(R.string.msg_no_intent_text));
-        }
-        return StringUtils.join(lines, "\n");
+        return mShortIntentStr;
     }
 
     /**
@@ -173,33 +195,76 @@ public class IntentService {
         return items;
     }
 
+    /**
+     * 共有元アプリの取得が可能であるか判定します。
+     * @return 可能の場合true
+     */
+    public boolean isValidSrcAppFunction() {
+        // Android 5 では、セキュリティが強化されたため、Recent Apps（最近使ったアプリ）で取得できるのは、
+        // 自アプリと、ホームの情報のみとなりました。
+        // そのため、共有元アプリは取得できません。
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+    }
+
     public void findSrcAppInfo() {
-        // インテント呼び出し元アプリを取得
-        // 「android.permission.GET_TASKS」が必要
-        // Androidの「Recent Apps」（最近使ったアプリ）から呼び出された場合は、呼び出し元アプリとしてAndroidシステムを取得します。
-        ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RecentTaskInfo> recentTaskInfoList = activityManager.getRecentTasks(2, ActivityManager.RECENT_WITH_EXCLUDED);
+        String packageName = null;
+        try {
+            // インテント呼び出し元アプリを取得
+            // 「android.permission.GET_TASKS」が必要
+            // Androidの「Recent Apps」（最近使ったアプリ）から呼び出された場合は、呼び出し元アプリとしてAndroidシステムを取得します。
+            // ※Android 5 では、セキュリティが強化されたため、Recent Apps（最近使ったアプリ）で取得できるのは、自アプリと、ホームの情報のみとなりました。
+            // 　そのため、共有元アプリは取得できません。
+            ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+            List<ActivityManager.RecentTaskInfo> recentTaskInfoList = activityManager.getRecentTasks(5, ActivityManager.RECENT_WITH_EXCLUDED);
 
-//        // 動作確認用ログ出力
-//        Log.d(TAG, "recentTaskInfoList.size()=" + recentTaskInfoList.size());
-//        for (ActivityManager.RecentTaskInfo recentTaskInfo : recentTaskInfoList) {
-//            // 1件目：自アクティビティ
-//            // 2件目：呼び出し元アクティビティ
-//            String className = recentTaskInfo.baseIntent.getComponent().getClassName().toString();
-//            Log.d(TAG, "className=" + className);
-//        }
+//            // 動作確認用ログ出力
+//            Log.d(TAG, "recentTaskInfoList.size()=" + recentTaskInfoList.size());
+//            for (ActivityManager.RecentTaskInfo recentTaskInfo : recentTaskInfoList) {
+//                // 1件目：自アクティビティ
+//                // 2件目：呼び出し元アクティビティ
+//                String tmpPackageName = recentTaskInfo.baseIntent.getComponent().getPackageName();
+//                String tmpClassName = recentTaskInfo.baseIntent.getComponent().getClassName();
+//                Log.d(TAG, "packageName=" + tmpPackageName + ", className=" + tmpClassName);
+//            }
 
-        String packageName;
-        if (recentTaskInfoList.size() >= 2) {
-            // 自アクティビティにandroid:launchMode="singleInstance"設定されていた場合
-            //ComponentName componentName = recentTaskInfoList.get(1).baseIntent.getComponent();
-            // 自アクティビティのandroid:launchModeがデフォルト設定の場合
-            ComponentName componentName = recentTaskInfoList.get(0).baseIntent.getComponent();
-            packageName = componentName.getPackageName();
-        } else {
-            Log.w(TAG, "インテント呼び出し元のRecentTaskInfoの取得に失敗しました。recentTaskInfoList.size()=" + recentTaskInfoList.size());
+            // Android 5.0.2 だと自アプリを取得していたので、当ロジック廃止。
+//            String packageName;
+//            if (recentTaskInfoList.size() >= 2) {
+//                // 自アクティビティにandroid:launchMode="singleInstance"設定されていた場合
+//                //ComponentName componentName = recentTaskInfoList.get(1).baseIntent.getComponent();
+//                // 自アクティビティのandroid:launchModeがデフォルト設定の場合
+//                ComponentName componentName = recentTaskInfoList.get(0).baseIntent.getComponent();
+//                packageName = componentName.getPackageName();
+//            } else {
+//                Log.w(TAG, "インテント呼び出し元のRecentTaskInfoの取得に失敗しました。recentTaskInfoList.size()=" + recentTaskInfoList.size());
+//                packageName = null;
+//            }
+
+            for (ActivityManager.RecentTaskInfo recentTaskInfo : recentTaskInfoList) {
+                String tmpPackageName = null;
+                if (recentTaskInfo.baseIntent.getComponent() != null) {
+                    tmpPackageName = recentTaskInfo.baseIntent.getComponent().getPackageName();
+                }
+                if (tmpPackageName == null) {
+                    tmpPackageName = recentTaskInfo.baseIntent.getPackage();
+                }
+                if (tmpPackageName == null) {
+                    // パッケージ名が取得できない場合は、共有元アプリ不明とします。
+                    break;
+                }
+                if (!tmpPackageName.equals(mContext.getPackageName())) {
+                    packageName = tmpPackageName;
+                    break;
+                }
+            }
+            if (packageName == null) {
+                Log.w(TAG, "インテント呼び出し元のPackageNameの取得に失敗しました。recentTaskInfoList.size()=" + recentTaskInfoList.size());
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "インテント呼び出し元のPackageNameの取得に失敗しました。", e);
             packageName = null;
         }
+
         setSrcAppInfo(packageName);
     }
 
@@ -218,6 +283,10 @@ public class IntentService {
         Log.d(TAG, "インテント呼び出し元=" + getSrcPackageName());
     }
 
+    /**
+     * 取得した共有元アプリが有効であるか判定します。
+     * @return 有効な場合true
+     */
     public boolean isValidSrcAppInfo() {
         return mSrcAppInfo != null;
     }

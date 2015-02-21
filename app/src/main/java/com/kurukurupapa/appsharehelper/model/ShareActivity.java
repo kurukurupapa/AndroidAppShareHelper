@@ -86,6 +86,9 @@ public class ShareActivity implements BaseColumns {
         mId = id;
     }
 
+    public boolean isNullSrcPackage() {
+        return mSrcPackage == null;
+    }
     public String getSrcPackage() {
         return mSrcPackage;
     }
