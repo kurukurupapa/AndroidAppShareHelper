@@ -36,5 +36,6 @@
 
     <!-- エラーメッセージ -->
     <string name="msg_err_src_app">共有元アプリの取得に失敗しました。</string>
+    <string name="msg_err_intent_str">共有内容の取得に失敗しました。</string>
 
 </resources>
