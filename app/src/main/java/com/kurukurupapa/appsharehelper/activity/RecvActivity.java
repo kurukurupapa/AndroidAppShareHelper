@@ -181,7 +181,8 @@ public class RecvActivity extends Activity {
         mDestLinearLayout.removeAllViews();
 
         // アクティビティ一覧を取得します。
-        List<ShareActivityAdapter> shareActivityList = mShareActivityService.find(mIntentService.getSrcPackageName(), mIntentService.getIntent());
+        List<ShareActivityAdapter> shareActivityList = mShareActivityService.find(
+                mIntentService.getSrcPackageName(), mIntentService.getIntent(), mIntentService.isText());
 
         // ListViewに、アクティビティ表示/起動用のViewを追加します。
         PackageManager pm = this.getPackageManager();

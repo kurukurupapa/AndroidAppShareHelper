@@ -39,11 +39,11 @@ public class ShareActivityService {
      * @param srcIntent インテント
      * @return リスト
      */
-    public List<ShareActivityAdapter> find(String srcPackage, Intent srcIntent) {
+    public List<ShareActivityAdapter> find(String srcPackage, Intent srcIntent, boolean isText) {
         List<ShareActivityAdapter> resultShareActivityList = new ArrayList<ShareActivityAdapter>();
 
         // 共有先アクティビティ候補一覧を取得します。
-        TreeMap<ComponentName, ShareActivityAdapter> allShareActivities = getAllShareActivities(srcPackage, srcIntent);
+        TreeMap<ComponentName, ShareActivityAdapter> allShareActivities = getAllShareActivities(srcPackage, srcIntent, isText);
 
         // DBからアクティビティ使用履歴を取得します。
         List<ShareActivity> shareActivityList = mShareActivityTableService.query(srcPackage, srcIntent);
@@ -74,21 +74,23 @@ public class ShareActivityService {
         return resultShareActivityList;
     }
 
-    private TreeMap<ComponentName, ShareActivityAdapter> getAllShareActivities(String srcPackage, Intent srcIntent) {
+    private TreeMap<ComponentName, ShareActivityAdapter> getAllShareActivities(String srcPackage, Intent srcIntent, boolean isText) {
         TreeMap<ComponentName, ShareActivityAdapter> shareActivities = new TreeMap<ComponentName, ShareActivityAdapter>();
-        shareActivities.putAll(getMyselfShareActivities(srcPackage, srcIntent));
+        shareActivities.putAll(getMyselfShareActivities(srcPackage, srcIntent, isText));
         shareActivities.putAll(getResolveShareActivities(srcPackage, srcIntent));
         return shareActivities;
     }
 
-    private TreeMap<ComponentName, ShareActivityAdapter> getMyselfShareActivities(String srcPackage, Intent srcIntent) {
+    private TreeMap<ComponentName, ShareActivityAdapter> getMyselfShareActivities(String srcPackage, Intent srcIntent, boolean isText) {
         TreeMap<ComponentName, ShareActivityAdapter> shareActivities = new TreeMap<ComponentName, ShareActivityAdapter>();
 
         // 当アプリ内の共有先アクティビティ
-        ComponentName componentName = new ComponentName(mContext.getPackageName(), ClipActivity.class.getName());
-        ShareActivity shareActivity = new ShareActivity(srcPackage, srcIntent, componentName);
-        ShareActivityAdapter shareActivityAdapter = new ShareActivityAdapter(shareActivity, mContext, mPackageManager, null, null, srcIntent);
-        shareActivities.put(componentName, shareActivityAdapter);
+        if (isText) {
+            ComponentName componentName = new ComponentName(mContext.getPackageName(), ClipActivity.class.getName());
+            ShareActivity shareActivity = new ShareActivity(srcPackage, srcIntent, componentName);
+            ShareActivityAdapter shareActivityAdapter = new ShareActivityAdapter(shareActivity, mContext, mPackageManager, null, null, srcIntent);
+            shareActivities.put(componentName, shareActivityAdapter);
+        }
 
         return shareActivities;
     }
