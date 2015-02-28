@@ -150,7 +150,7 @@ public class StandardAppFragment extends ListFragment {
         List<ShareActivity> list = mShareActivityService.findStandardApp();
 
         // 共有アクティビティデータをリストへ紐づけます。
-        mAdapter = new StandardAppArrayAdapter(getActivity(), list,
+        mAdapter = StandardAppArrayAdapter.create(getActivity(), list,
                 new ToggleButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

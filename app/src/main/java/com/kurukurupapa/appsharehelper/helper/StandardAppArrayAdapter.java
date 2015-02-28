@@ -13,6 +13,7 @@ import android.widget.ToggleButton;
 
 import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.model.ShareActivity;
+import com.kurukurupapa.appsharehelper.service.IntentService;
 
 import java.util.List;
 
@@ -25,14 +26,44 @@ public class StandardAppArrayAdapter extends ArrayAdapter<ShareActivity> {
     private final LayoutInflater mLayoutInflater;
     private int mPosition;
     private boolean mDevFlag;
-
     private ToggleButton.OnCheckedChangeListener mOnStandardCheckedChangeListener;
+    private int mLayoutId;
+    private StandardAppArrayAdapterSrcApp mStandardAppArrayAdapterSrcApp;
 
-    public StandardAppArrayAdapter(Context context, List<ShareActivity> objects,
-                                   Switch.OnCheckedChangeListener onStandardCheckedChangeListener) {
+    /**
+     * インスタンスを生成します。
+     * @param context
+     * @param objects
+     * @param onStandardCheckedChangeListener
+     * @return
+     */
+    public static StandardAppArrayAdapter create(Context context, List<ShareActivity> objects, Switch.OnCheckedChangeListener onStandardCheckedChangeListener) {
+        StandardAppArrayAdapter instance;
+        if (IntentService.isValidSrcAppFunction()) {
+            instance = new StandardAppArrayAdapter(context, objects, onStandardCheckedChangeListener, R.layout.card_standard_app, new StandardAppArrayAdapterSrcApp());
+        } else {
+            instance = new StandardAppArrayAdapter(context, objects, onStandardCheckedChangeListener, R.layout.card_standard_app2, null);
+        }
+        return instance;
+    }
+
+    /**
+     * コンストラクタ
+     * @param context
+     * @param objects
+     * @param onStandardCheckedChangeListener
+     * @param layoutId
+     * @param standardAppArrayAdapterSrcApp
+     */
+    private StandardAppArrayAdapter(
+            Context context, List<ShareActivity> objects,
+            Switch.OnCheckedChangeListener onStandardCheckedChangeListener,
+            int layoutId, StandardAppArrayAdapterSrcApp standardAppArrayAdapterSrcApp) {
         super(context, 0, objects);
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mOnStandardCheckedChangeListener = onStandardCheckedChangeListener;
+        mLayoutId = layoutId;
+        mStandardAppArrayAdapterSrcApp = standardAppArrayAdapterSrcApp;
     }
 
     public void setDevFlag(boolean devFlag) {
@@ -44,23 +75,19 @@ public class StandardAppArrayAdapter extends ArrayAdapter<ShareActivity> {
         // Viewが未作成の場合、新規に作成します。
         // 作成済みの場合は、そのまま再利用します。
         if (convertView == null) {
-            convertView = mLayoutInflater.inflate(R.layout.card_standard_app, null);
+            convertView = mLayoutInflater.inflate(mLayoutId, null);
         }
 
         // 当該行のデータを取得します。
         ShareActivity shareActivity = getItem(position);
 
         // Viewオブジェクトを設定します。
-        ImageView srcImageView = (ImageView) convertView.findViewById(R.id.src_image_view);
-        TextView srcTextView = (TextView) convertView.findViewById(R.id.src_text_view);
         ImageView destImageView = (ImageView) convertView.findViewById(R.id.dest_image_view);
         TextView destTextView = (TextView) convertView.findViewById(R.id.dest_text_view);
         TextView actionTypeTextView = (TextView) convertView.findViewById(R.id.action_type_text_view);
         Switch standardSwitch = (Switch) convertView.findViewById(R.id.standard_switch);
 
         ShareActivityAdapter helper = new ShareActivityAdapter(shareActivity, getContext(), getContext().getPackageManager(), null, null, null);
-        srcImageView.setImageDrawable(helper.loadSrcPackageIcon());
-        srcTextView.setText(helper.loadSrcPackageLabel());
         destImageView.setImageDrawable(helper.loadDestActivityIcon());
         destTextView.setText(helper.loadDestActivityLabel());
         if (mDevFlag) {
@@ -74,6 +101,11 @@ public class StandardAppArrayAdapter extends ArrayAdapter<ShareActivity> {
         standardSwitch.setOnCheckedChangeListener(null);
         standardSwitch.setChecked(shareActivity.getStandardFlag());
         standardSwitch.setOnCheckedChangeListener(mOnStandardCheckedChangeListener);
+
+        // 共有元アプリ表示
+        if (mStandardAppArrayAdapterSrcApp != null) {
+            mStandardAppArrayAdapterSrcApp.setupView(convertView, helper);
+        }
 
         // アニメーション開始
         // ※下にスクロールする場合だけアニメーションを表示します。

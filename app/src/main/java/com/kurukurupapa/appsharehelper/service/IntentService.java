@@ -199,7 +199,7 @@ public class IntentService {
      * 共有元アプリの取得が可能であるか判定します。
      * @return 可能の場合true
      */
-    public boolean isValidSrcAppFunction() {
+    public static boolean isValidSrcAppFunction() {
         // Android 5 では、セキュリティが強化されたため、Recent Apps（最近使ったアプリ）で取得できるのは、
         // 自アプリと、ホームの情報のみとなりました。
         // そのため、共有元アプリは取得できません。

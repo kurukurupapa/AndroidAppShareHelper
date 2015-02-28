@@ -17,12 +17,12 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.helper.DbHelper;
 import com.kurukurupapa.appsharehelper.helper.NotificationHelper;
 import com.kurukurupapa.appsharehelper.helper.PreferenceHelper;
+import com.kurukurupapa.appsharehelper.helper.RecvActivitySrcApp;
 import com.kurukurupapa.appsharehelper.helper.ShareActivityAdapter;
 import com.kurukurupapa.appsharehelper.model.ShareHistory;
 import com.kurukurupapa.appsharehelper.service.IntentService;
@@ -35,6 +35,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.List;
 
 /**
+ * 受信アクティビティ
+ *
  * インテント呼び出しを受信するアクティビティです。
  */
 public class RecvActivity extends Activity {
@@ -49,19 +51,19 @@ public class RecvActivity extends Activity {
 
     private RelativeLayout mRootLayout;
     private Switch mDevSwitch;
-    private ImageView mSrcImageView;
-    private TextView mSrcNameTextView;
     private TextView mIntentValueTextView;
     private LinearLayout mDestLinearLayout;
     private Switch mStandardSwitch;
     private Animation mActivityShowAnimation;
     private Animation mViewChangeAnimation;
 
+    private RecvActivitySrcApp mRecvActivitySrcApp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate Called. savedInstanceState=" + savedInstanceState);
-        setContentView(R.layout.activity_recv);
+        setContentView(getLayoutResId());
 
         // オブジェクト生成
         mDbHelper = new DbHelper(this);
@@ -73,13 +75,15 @@ public class RecvActivity extends Activity {
         // UIオブジェクト取得
         mRootLayout = (RelativeLayout) findViewById(R.id.root_layout);
         mDevSwitch = (Switch) findViewById(R.id.dev_switch);
-        mSrcImageView = (ImageView) findViewById(R.id.src_image_view);
-        mSrcNameTextView = (TextView) findViewById(R.id.src_name_text_view);
         mIntentValueTextView = (TextView) findViewById(R.id.intent_value_text_view);
         mDestLinearLayout = (LinearLayout) findViewById(R.id.dest_linear_layout);
         mStandardSwitch = (Switch) findViewById(R.id.standard_switch);
         mActivityShowAnimation = AnimationUtils.loadAnimation(this, R.anim.activity_show);
         mViewChangeAnimation = AnimationUtils.loadAnimation(this, R.anim.view_change);
+
+        if (IntentService.isValidSrcAppFunction()) {
+            mRecvActivitySrcApp = new RecvActivitySrcApp(this);
+        }
 
         // タイトル設定
         ActionBar actionBar = getActionBar();
@@ -114,6 +118,16 @@ public class RecvActivity extends Activity {
         }
     }
 
+    private int getLayoutResId() {
+        int resId;
+        if (IntentService.isValidSrcAppFunction()) {
+            resId = R.layout.activity_recv;
+        } else {
+            resId = R.layout.activity_recv2;
+        }
+        return resId;
+    }
+
     /**
      * 当アクティビティのオブジェクトが存在する状態で、新しいインテントを受け取った場合の処理です。
      * @param intent 新しいインテント
@@ -135,7 +149,9 @@ public class RecvActivity extends Activity {
 
         // インテントが変わっていたら内容を画面表示
         if (mIntentService.isIntentChanged()) {
-            showSrcApp();
+            if (mRecvActivitySrcApp != null) {
+                mRecvActivitySrcApp.show(mIntentService);
+            }
             showIntent();
             showDestActivity();
             mRootLayout.startAnimation(mActivityShowAnimation);
@@ -156,21 +172,6 @@ public class RecvActivity extends Activity {
      */
     private void showIntent() {
         setIntentValueTextView(false);
-    }
-
-    /**
-     * インテント呼び出し元アプリを表示
-     */
-    private void showSrcApp() {
-        if (mIntentService.isValidSrcAppInfo()) {
-            PackageManager pm = getPackageManager();
-            mSrcImageView.setImageDrawable(mIntentService.getSrcAppIcon());
-            mSrcNameTextView.setText(mIntentService.getSrcAppLabel());
-        } else {
-            mSrcImageView.setImageResource(R.drawable.ic_unknown);
-            mSrcNameTextView.setText(getString(R.string.label_unknown));
-            Toast.makeText(this, getString(R.string.msg_err_src_app), Toast.LENGTH_SHORT).show();
-        }
     }
 
     /**

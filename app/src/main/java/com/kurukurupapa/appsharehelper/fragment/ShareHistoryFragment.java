@@ -20,14 +20,12 @@ import com.kurukurupapa.appsharehelper.helper.DbHelper;
 import com.kurukurupapa.appsharehelper.helper.PreferenceHelper;
 import com.kurukurupapa.appsharehelper.helper.ShareHistoryAdapter;
 import com.kurukurupapa.appsharehelper.helper.ShareHistoryArrayAdapter;
-import com.kurukurupapa.appsharehelper.model.ShareHistory;
 import com.kurukurupapa.appsharehelper.model.dummy.DummyContent;
 import com.kurukurupapa.appsharehelper.service.ShareActivityCacheService;
 import com.kurukurupapa.appsharehelper.service.ShareActivityTableService;
 import com.kurukurupapa.appsharehelper.service.ShareHistoryService;
 
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * 共有履歴フラグメント
@@ -167,7 +165,7 @@ public class ShareHistoryFragment extends ListFragment {
         List<ShareHistoryAdapter> list = mShareHistoryService.find(mShareActivityCacheService, getActivity());
 
         // 共有履歴データをリストへ紐づけ
-        mAdapter = new ShareHistoryArrayAdapter(getActivity(), list);
+        mAdapter = ShareHistoryArrayAdapter.create(getActivity(), list);
         setListAdapter(mAdapter);
 
         // データなし設定
