@@ -77,7 +77,7 @@ public class ShareActivityTableService {
      */
     public List<ShareActivity> query(String srcPackage, Intent srcIntent) {
         return query(
-                ShareActivity.COLUMN_SRC_PACKAGE + "='" + srcPackage + "' and " +
+                ShareActivity.COLUMN_SRC_PACKAGE + (srcPackage == null ? " is null" : "='" + srcPackage + "'") + " and " +
                 ShareActivity.COLUMN_ACTION + "='" + srcIntent.getAction() + "' and " +
                 ShareActivity.COLUMN_TYPE + (srcIntent.getType() == null ? " is null" : "='" + srcIntent.getType() + "'"),
                 ShareActivity.COLUMN_TIMESTAMP + " desc," + ShareActivity._ID);

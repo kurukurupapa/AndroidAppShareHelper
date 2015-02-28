@@ -53,7 +53,8 @@ public class ShareActivityAdapter {
         return mShareActivity;
     }
     public void setShareActivity(ShareActivity shareActivity) {
-        if (!shareActivity.getSrcPackage().equals(mShareActivity.getSrcPackage()) ||
+        if ((shareActivity.getSrcPackage() == null && mShareActivity.getSrcPackage() != null) ||
+                (shareActivity.getSrcPackage() != null && !shareActivity.getSrcPackage().equals(mShareActivity.getSrcPackage())) ||
                 !shareActivity.getDestPackage().equals(mShareActivity.getDestPackage()) ||
                 !shareActivity.getDestActivity().equals(mShareActivity.getDestActivity())) {
             throw new RuntimeException("引数が不正です。shareActivity=" + ToStringBuilder.reflectionToString(shareActivity));
@@ -94,6 +95,8 @@ public class ShareActivityAdapter {
         CharSequence label;
         if (getSrcAppInfo() != null) {
             label = getSrcAppInfo().loadLabel(mPackageManager);
+        } else if(!mShareActivity.isNullSrcPackage()) {
+            label = mShareActivity.getSrcPackage();
         } else {
             label = mContext.getString(R.string.label_unknown);
         }

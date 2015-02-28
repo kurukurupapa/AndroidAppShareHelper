@@ -3,6 +3,8 @@ package com.kurukurupapa.appsharehelper.helper;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
+import android.util.Log;
 
 import com.kurukurupapa.appsharehelper.model.ShareActivity;
 import com.kurukurupapa.appsharehelper.model.ShareHistory;
@@ -11,8 +13,10 @@ import com.kurukurupapa.appsharehelper.model.ShareHistory;
  * データベース操作のヘルパークラス
  */
 public class DbHelper extends SQLiteOpenHelper {
+    private static final String TAG = DbHelper.class.getSimpleName();
+
     private static final String DB_FILE_NAME = "db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     public DbHelper(Context context) {
         super(context, DB_FILE_NAME, null, DB_VERSION);
@@ -20,6 +24,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        Log.d(TAG, "onCreate called.");
+
         db.execSQL("create table " + ShareActivity.TABLE_NAME + " (" +
             ShareActivity._ID + " integer primary key autoincrement, " +
             ShareActivity.COLUMN_SRC_PACKAGE + " text, " +
@@ -45,5 +51,12 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d(TAG, "onUpgrade called.");
+
+        if (newVersion == 2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // Android5におけるsrc_packageカラム設定値不具合の修正を行います。
+            db.execSQL("update share_activity set src_package=null where src_package='com.kurukurupapa.appsharehelper'");
+            Log.d(TAG, "share_activityテーブルのsrc_packageカラムのデータを修正しました。");
+        }
     }
 }

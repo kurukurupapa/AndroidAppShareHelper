@@ -207,6 +207,19 @@ public class IntentService {
     }
 
     public void findSrcAppInfo() {
+        if (isValidSrcAppFunction()) {
+            findSrcAppInfo_Android4();
+        } else {
+            findSrcAppInfo_Android5();
+        }
+    }
+
+    private void findSrcAppInfo_Android5() {
+        // Android 5 では、共有元アプリの取得できません。
+        setSrcAppInfo(null);
+    }
+
+    private void findSrcAppInfo_Android4() {
         String packageName = null;
         try {
             // インテント呼び出し元アプリを取得
@@ -215,7 +228,7 @@ public class IntentService {
             // ※Android 5 では、セキュリティが強化されたため、Recent Apps（最近使ったアプリ）で取得できるのは、自アプリと、ホームの情報のみとなりました。
             // 　そのため、共有元アプリは取得できません。
             ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
-            List<ActivityManager.RecentTaskInfo> recentTaskInfoList = activityManager.getRecentTasks(5, ActivityManager.RECENT_WITH_EXCLUDED);
+            List<ActivityManager.RecentTaskInfo> recentTaskInfoList = activityManager.getRecentTasks(2, ActivityManager.RECENT_WITH_EXCLUDED);
 
 //            // 動作確認用ログ出力
 //            Log.d(TAG, "recentTaskInfoList.size()=" + recentTaskInfoList.size());
@@ -227,26 +240,10 @@ public class IntentService {
 //                Log.d(TAG, "packageName=" + tmpPackageName + ", className=" + tmpClassName);
 //            }
 
-            // Android 5.0.2 だと自アプリを取得していたので、当ロジック廃止。
-//            String packageName;
-//            if (recentTaskInfoList.size() >= 2) {
-//                // 自アクティビティにandroid:launchMode="singleInstance"設定されていた場合
-//                //ComponentName componentName = recentTaskInfoList.get(1).baseIntent.getComponent();
-//                // 自アクティビティのandroid:launchModeがデフォルト設定の場合
-//                ComponentName componentName = recentTaskInfoList.get(0).baseIntent.getComponent();
-//                packageName = componentName.getPackageName();
-//            } else {
-//                Log.w(TAG, "インテント呼び出し元のRecentTaskInfoの取得に失敗しました。recentTaskInfoList.size()=" + recentTaskInfoList.size());
-//                packageName = null;
-//            }
-
             for (ActivityManager.RecentTaskInfo recentTaskInfo : recentTaskInfoList) {
                 String tmpPackageName = null;
                 if (recentTaskInfo.baseIntent.getComponent() != null) {
                     tmpPackageName = recentTaskInfo.baseIntent.getComponent().getPackageName();
-                }
-                if (tmpPackageName == null) {
-                    tmpPackageName = recentTaskInfo.baseIntent.getPackage();
                 }
                 if (tmpPackageName == null) {
                     // パッケージ名が取得できない場合は、共有元アプリ不明とします。
@@ -273,12 +270,14 @@ public class IntentService {
         mSrcAppInfo = null;
 
         // インテント呼び出し元アプリを取得
-        mPackageManager = mContext.getPackageManager();
-        try {
-            mSrcAppInfo = mPackageManager.getApplicationInfo(srcPackageName, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.w(TAG, "インテント呼び出し元のApplicationInfoの取得に失敗しました。srcPackageName=" + srcPackageName, e);
-            mSrcAppInfo = null;
+        if (srcPackageName != null) {
+            mPackageManager = mContext.getPackageManager();
+            try {
+                mSrcAppInfo = mPackageManager.getApplicationInfo(srcPackageName, 0);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.w(TAG, "インテント呼び出し元のApplicationInfoの取得に失敗しました。srcPackageName=" + srcPackageName, e);
+                mSrcAppInfo = null;
+            }
         }
         Log.d(TAG, "インテント呼び出し元=" + getSrcPackageName());
     }
