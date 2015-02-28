@@ -58,9 +58,10 @@ public class ShareActivityService {
             // DB登録されていたアクティビティが、候補一覧に存在することを確認します。
             ShareActivityAdapter targetShareActivity = allShareActivities.get(componentName);
             if (targetShareActivity == null) {
-                // DBのアクティビティ一覧に存在し、候補一覧に存在しなかったアクティビティは、アンインストールされたと考えます。
-                // DBの該当データは不要なので、削除します。
-                mShareActivityTableService.delete(shareActivity);
+                // TODO 検討が必要そうです。
+//                // DBのアクティビティ一覧に存在し、候補一覧に存在しなかったアクティビティは、アンインストールされたと考えます。
+//                // DBの該当データは不要なので、削除します。
+//                mShareActivityTableService.delete(shareActivity);
             } else {
                 // 結果リストへ登録します。
                 targetShareActivity.setShareActivity(shareActivity);
