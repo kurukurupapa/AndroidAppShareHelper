@@ -58,6 +58,7 @@
 
                 <data android:mimeType="text/*" />
                 <data android:mimeType="image/*" />
+                <data android:mimeType="*/*" />
             </intent-filter>
             <!-- 画像共有 -->
             <intent-filter>
@@ -66,6 +67,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="image/*" />
+                <data android:mimeType="*/*" />
             </intent-filter>
             <!-- メーラー呼び出し -->
             <intent-filter>
