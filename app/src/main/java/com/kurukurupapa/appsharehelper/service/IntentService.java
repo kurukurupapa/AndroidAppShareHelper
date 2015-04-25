@@ -30,6 +30,7 @@ import java.util.List;
  */
 public class IntentService {
     private static final String TAG = IntentService.class.getSimpleName();
+    private static final String ANDROID_SYSTEM_PACKAGE_NAME = "android";
 
     private Context mContext;
     private Intent mIntent;
@@ -228,11 +229,16 @@ public class IntentService {
             // ※Android 5 では、セキュリティが強化されたため、Recent Apps（最近使ったアプリ）で取得できるのは、自アプリと、ホームの情報のみとなりました。
             // 　そのため、共有元アプリは取得できません。
             ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
-            List<ActivityManager.RecentTaskInfo> recentTaskInfoList = activityManager.getRecentTasks(2, ActivityManager.RECENT_WITH_EXCLUDED);
+            List<ActivityManager.RecentTaskInfo> recentTaskInfoList = activityManager.getRecentTasks(3, ActivityManager.RECENT_WITH_EXCLUDED);
 
 //            // 動作確認用ログ出力
 //            Log.d(TAG, "recentTaskInfoList.size()=" + recentTaskInfoList.size());
 //            for (ActivityManager.RecentTaskInfo recentTaskInfo : recentTaskInfoList) {
+//                // Androidシステムのアプリ選択ダイアログを挟む場合
+//                // 1件目：Androidシステム
+//                // 2件目：自アクティビティ
+//                // 3件目：呼び出し元アクティビティ
+//                // Androidシステムのアプリ選択ダイアログを挟まない場合
 //                // 1件目：自アクティビティ
 //                // 2件目：呼び出し元アクティビティ
 //                String tmpPackageName = recentTaskInfo.baseIntent.getComponent().getPackageName();
@@ -249,7 +255,9 @@ public class IntentService {
                     // パッケージ名が取得できない場合は、共有元アプリ不明とします。
                     break;
                 }
-                if (!tmpPackageName.equals(mContext.getPackageName())) {
+                // 自アプリとAndroidシステムは対象外とします。
+                if (!tmpPackageName.equals(mContext.getPackageName())
+                        && !tmpPackageName.equals(ANDROID_SYSTEM_PACKAGE_NAME)) {
                     packageName = tmpPackageName;
                     break;
                 }
