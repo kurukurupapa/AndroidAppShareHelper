@@ -9,6 +9,7 @@
     <!-- ナビゲーションドロワー内の項目名 -->
     <string name="title_nav_history">共有履歴</string>
     <string name="title_nav_standard_app">標準アプリ一覧</string>
+    <string name="title_nav_clipboard">クリップボードから共有</string>
     <string name="title_nav_settings">設定</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -33,6 +34,7 @@
     <string name="msg_no_intent_text">テキストデータがありません。</string>
     <string name="msg_intent_send">共有しました。</string>
     <string name="msg_copy_to_clipboard">クリップボードにコピーしました。</string>
+    <string name="msg_no_clipdata">クリップボードに対象データがありません。</string>
 
     <!-- エラーメッセージ -->
     <string name="msg_err_src_app">共有元アプリの取得に失敗しました。</string>

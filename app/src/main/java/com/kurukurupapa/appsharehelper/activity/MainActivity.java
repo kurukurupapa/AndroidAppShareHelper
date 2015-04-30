@@ -10,12 +10,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.fragment.ShareHistoryFragment;
 import com.kurukurupapa.appsharehelper.fragment.NavigationDrawerFragment;
 import com.kurukurupapa.appsharehelper.fragment.StandardAppFragment;
 import com.kurukurupapa.appsharehelper.model.NavigationDrawerItems;
+import com.kurukurupapa.appsharehelper.service.ClipboardService;
 
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks,
@@ -33,6 +35,11 @@ public class MainActivity extends Activity
      */
     private CharSequence mTitle;
 
+    /**
+     * クリップボードサービス
+     */
+    private ClipboardService mClipboardService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +52,9 @@ public class MainActivity extends Activity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        // オブジェクト生成
+        mClipboardService = new ClipboardService(this);
     }
 
     @Override
@@ -54,6 +64,12 @@ public class MainActivity extends Activity
         if (position == NavigationDrawerItems.POSITION_SETTINGS) {
             // 設定画面を起動します。
             startSettingsActivity();
+
+        } else if (position == NavigationDrawerItems.POSITION_CLIPBOARD) {
+            // 受信アクティビティを起動します。
+            startRecvActivityWithClipboard();
+            // ナビゲーションドロワーの選択項目を1番目に戻しておきます。
+            mNavigationDrawerFragment.selectItem(0);
 
         } else {
             // フラグメントを作成する。
@@ -126,6 +142,21 @@ public class MainActivity extends Activity
     @Override
     public void onShareHistoryFragmentInteraction(String id) {
         // TODO
+    }
+
+    /**
+     * 受信アクティビティを呼び出します。
+     */
+    private void startRecvActivityWithClipboard() {
+        // インテントを作成
+        Intent intent = mClipboardService.createIntent();
+        if (intent == null) {
+            Toast.makeText(this, getString(R.string.msg_no_clipdata), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 受信アクティビティを呼び出します。
+        startActivity(intent);
     }
 
     /**

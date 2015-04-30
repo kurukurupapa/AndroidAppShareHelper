@@ -3,12 +3,12 @@ package com.kurukurupapa.appsharehelper.service;
 import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.ClipData;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +17,7 @@ import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.activity.RecvActivity;
 import com.kurukurupapa.appsharehelper.helper.IntentToStringStyle;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -24,13 +25,25 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 /**
  * インテント受信に関するサービスクラスです。
  */
 public class IntentService {
+    /** 当アプリから当アプリ内アクティビティを呼び出すときに設定するインテントのExtraキー */
+    public static final String EXTRA_MY_APP = "com.kurukurupapa.appsharehelper.intent.extra.MY_APP";
+
     private static final String TAG = IntentService.class.getSimpleName();
     private static final String ANDROID_SYSTEM_PACKAGE_NAME = "android";
+
+    /** ClipDataに対応するIntentのExtraキーリスト */
+    private static final String[] IGNORE_EXTRA_KEYS = new String[]{
+            Intent.EXTRA_HTML_TEXT,
+            Intent.EXTRA_TEXT,
+            Intent.EXTRA_ORIGINATING_URI,
+            Intent.EXTRA_INTENT,
+    };
 
     private Context mContext;
     private Intent mIntent;
@@ -66,36 +79,49 @@ public class IntentService {
         intentChangedFlag = false;
     }
 
-    public void initShortIntentStr() {
+    private void initShortIntentStr() {
         mShortIntentStr = null;
         mTextFlag = false;
 
         try {
-            ArrayList<String> lines = new ArrayList<String>();
-            if (mIntent.getData() != null) {
-                lines.add(mIntent.getDataString());
-            }
-            for (String item : getClipDataShortStrList(mIntent)) {
-                if (!lines.contains(item)) {
-                    lines.add(item);
-                }
-            }
-            for (String item : getExtrasStrList(mIntent)) {
-                if (!lines.contains(item)) {
-                    lines.add(item);
-                }
-            }
-            if (lines.size() == 0) {
+            mShortIntentStr = getShortIntentStr(mIntent);
+            if (mShortIntentStr == null) {
                 // テキストが見つからなかった場合のメッセージ
                 mShortIntentStr = mContext.getString(R.string.msg_no_intent_text);
             } else {
-                mShortIntentStr = StringUtils.join(lines, "\n");
                 mTextFlag = true;
             }
         } catch (Exception e) {
             Log.w(TAG, "共有内容の解析に失敗しました。", e);
             mShortIntentStr = mContext.getString(R.string.msg_err_intent_str);
         }
+    }
+
+    private static String getShortIntentStr(Intent intent) {
+        String str = null;
+        boolean clipDataFlag = false;
+        ArrayList<String> lines = new ArrayList<String>();
+        for (String item : getClipDataShortStrList(intent)) {
+            if (!lines.contains(item)) {
+                lines.add(item);
+                clipDataFlag = true;
+            }
+        }
+        for (String item : getExtrasStrList(intent, clipDataFlag)) {
+            if (!lines.contains(item)) {
+                lines.add(item);
+            }
+        }
+        if (intent.getData() != null) {
+            String tmp = intent.getData().toString();
+            if (StringUtils.isNotEmpty(tmp)) {
+                lines.add(tmp);
+            }
+        }
+        if (lines.size() > 0) {
+            str = StringUtils.join(lines, "\n");
+        }
+        return str;
     }
 
     public boolean isText() {
@@ -120,11 +146,11 @@ public class IntentService {
                 ;
     }
 
-    private ArrayList<String> getClipDataShortStrList(Intent intent) {
+    private static ArrayList<String> getClipDataShortStrList(Intent intent) {
         return getClipDataShortStrList(getClipData(intent));
     }
 
-    private ArrayList<String> getClipDataShortStrList(ClipData clipData) {
+    private static ArrayList<String> getClipDataShortStrList(ClipData clipData) {
 //        String clipDataStr = ToStringBuilder.reflectionToString(clipData, ToStringStyle.SIMPLE_STYLE);
 //        Log.d(TAG, "ClipData=" + clipDataStr);
 //        return clipDataStr;
@@ -137,10 +163,18 @@ public class IntentService {
 //                Log.d(TAG, "ClipData Item " + i + "=" + ToStringBuilder.reflectionToString(item));
 //                Log.d(TAG, "ClipData Item String " + i + "=" + item.getText());
 
-                // ひとまずtextのみを対象とします。
-                // html, uri, intentは無視します。
+                // 優先順位を考慮して、文字列化します。
+                // HTMLが設定されている場合、必ずTEXTが設定されているため、HTMLは見ていません。
+                String value = null;
                 if (item.getText() != null) {
-                    lines.add(item.getText().toString());
+                    value = item.getText().toString();
+                } else if (item.getUri() != null) {
+                    value = item.getUri().toString();
+                } else if (item.getIntent() != null) {
+                    value = getShortIntentStr(item.getIntent());
+                }
+                if (!StringUtils.isEmpty(value)) {
+                    lines.add(value);
                 }
             }
         }
@@ -182,14 +216,38 @@ public class IntentService {
         return clipData;
     }
 
-    private ArrayList<String> getExtrasStrList(Intent intent) {
+    private static ArrayList<String> getExtrasStrList(Intent intent, boolean clipDataFlag) {
         ArrayList<String> items = new ArrayList<String>();
         Bundle extras = intent.getExtras();
         if (extras != null) {
-            for (String key : extras.keySet()) {
+            for (String key : new TreeSet<String>(extras.keySet())) {
+
+                // 既にClipDataから文字列化している項目はスキップします。
+                if (clipDataFlag) {
+                    if (ArrayUtils.contains(IGNORE_EXTRA_KEYS, key)) {
+                        continue;
+                    }
+                }
+
+                // Intent.EXTRA_HTML_TEXTが存在する場合、Intent.EXTRA_TEXTも存在し、
+                // Intent.EXTRA_TEXTを優先する。
+                if (key.equals(Intent.EXTRA_HTML_TEXT)) {
+                    continue;
+                }
+
                 Object value = extras.get(key);
-                if (value instanceof String) {
+                if (value instanceof String && StringUtils.isNotEmpty(value.toString())) {
                     items.add(value.toString());
+                } else if (value instanceof Uri) {
+                    String str = value.toString();
+                    if (StringUtils.isNotEmpty(str)) {
+                        items.add(str);
+                    }
+                } else if (value instanceof Intent) {
+                    String str = getShortIntentStr((Intent)value);
+                    if (StringUtils.isNotEmpty(str)) {
+                        items.add(str);
+                    }
                 }
             }
         }
@@ -209,7 +267,12 @@ public class IntentService {
 
     public void findSrcAppInfo() {
         if (isValidSrcAppFunction()) {
-            findSrcAppInfo_Android4();
+            if (mIntent.getBooleanExtra(EXTRA_MY_APP, false)) {
+                // 当アプリ内からの呼び出しであると判定
+                setSrcAppInfo(mContext.getPackageName());
+            } else {
+                findSrcAppInfo_Android4();
+            }
         } else {
             findSrcAppInfo_Android5();
         }
