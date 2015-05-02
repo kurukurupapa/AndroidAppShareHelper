@@ -110,7 +110,7 @@ public class ShareHistoryService {
      *
      * @param remainMills 残す時間（ミリ秒）
      */
-    public void deleteOld(long remainMills) {
+    private void deleteOld(long remainMills) {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         try {
             long remainTimestamp = System.currentTimeMillis() - remainMills;

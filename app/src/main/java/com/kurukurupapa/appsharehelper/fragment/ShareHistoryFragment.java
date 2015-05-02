@@ -161,6 +161,9 @@ public class ShareHistoryFragment extends ListFragment {
         super.onResume();
         Log.d(TAG, "onResume called");
 
+        // 古い共有履歴データを削除
+        mShareHistoryService.deleteOld();
+
         // 共有履歴データを取得
         List<ShareHistoryAdapter> list = mShareHistoryService.find(mShareActivityCacheService, getActivity());
 
