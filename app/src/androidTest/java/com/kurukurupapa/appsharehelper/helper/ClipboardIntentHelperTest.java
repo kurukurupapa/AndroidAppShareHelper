@@ -1,4 +1,4 @@
-package com.kurukurupapa.appsharehelper.service;
+package com.kurukurupapa.appsharehelper.helper;
 
 import android.annotation.TargetApi;
 import android.content.ClipData;
@@ -11,14 +11,14 @@ import com.kurukurupapa.appsharehelper.activity.RecvActivity;
 
 import junit.framework.TestCase;
 
-public class ClipboardServiceTest extends AndroidTestCase {
+public class ClipboardIntentHelperTest extends AndroidTestCase {
 
-    private ClipboardService sut;
+    private ClipboardIntentHelper sut;
 
     public void setUp() throws Exception {
         super.setUp();
 
-        sut = new ClipboardService(getContext());
+        sut = new ClipboardIntentHelper(getContext());
     }
 
     public void testCreateIntent_NULL() throws Exception {

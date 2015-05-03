@@ -1,4 +1,4 @@
-package com.kurukurupapa.appsharehelper.service;
+package com.kurukurupapa.appsharehelper.helper;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -11,13 +11,15 @@ import android.net.Uri;
 import android.os.Build;
 
 import com.kurukurupapa.appsharehelper.activity.RecvActivity;
+import com.kurukurupapa.appsharehelper.service.IntentService;
 
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * クリップボードを操作するサービスクラスです。
+ * クリップボード・インテント・ヘルパークラス。
+ * クリップボード内容を他アプリへ共有するためのインテントを作成します。
  */
-public class ClipboardService {
+public class ClipboardIntentHelper {
     /**
      * コンテキスト
      */
@@ -28,7 +30,7 @@ public class ClipboardService {
      *
      * @param context
      */
-    public ClipboardService(Context context) {
+    public ClipboardIntentHelper(Context context) {
         mContext = context;
     }
 
@@ -45,7 +47,7 @@ public class ClipboardService {
     /**
      * 受信アクティビティ起動インテントを作成します。
      *
-     * @return インテント
+     * @return インテント。作成不可の場合、null。
      */
     public Intent createIntent() {
         // クリップボードの内容を取得します。
@@ -106,12 +108,11 @@ public class ClipboardService {
     private Intent createRecvActivityIntent() {
         Intent intent = new Intent(mContext, RecvActivity.class);
         intent.setAction(Intent.ACTION_SEND);
-        intent.putExtra(IntentService.EXTRA_MY_APP, true);
         return intent;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private String getHtmlText(ClipData.Item item) {
+    private static String getHtmlText(ClipData.Item item) {
         return item.getHtmlText();
     }
 

@@ -2,6 +2,7 @@ package com.kurukurupapa.appsharehelper.activity;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
 import com.kurukurupapa.appsharehelper.R;
+import com.kurukurupapa.appsharehelper.helper.NotificationHelper;
 
 import java.util.List;
 
@@ -31,7 +33,7 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     /**
      * Determines whether to always view_change the simplified settings UI, where
      * settings are presented in a single list. When false, settings are shown
@@ -41,6 +43,9 @@ public class SettingsActivity extends PreferenceActivity {
     private static final boolean ALWAYS_SIMPLE_PREFS = true;
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
+
+    /** クリップボード監視フラグのプリファレンスキー */
+    private static final String KEY_CLIPBOARD_FLAG = "clipboard_flag";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -229,6 +234,30 @@ public class SettingsActivity extends PreferenceActivity {
 
         Preference preference = findPreference("version");
         preference.setSummary(versionName);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // プリファレンス監視開始
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // プリファレンス監視終了
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(KEY_CLIPBOARD_FLAG)) {
+            // クリップボード共有通知フラグ変更時
+            new NotificationHelper(this).renotifyClipboardIfNeed();
+        }
     }
 
 }

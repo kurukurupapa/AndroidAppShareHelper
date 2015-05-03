@@ -28,12 +28,10 @@ import java.util.List;
 import java.util.TreeSet;
 
 /**
+ * インテント受信サービスクラス。
  * インテント受信に関するサービスクラスです。
  */
 public class IntentService {
-    /** 当アプリから当アプリ内アクティビティを呼び出すときに設定するインテントのExtraキー */
-    public static final String EXTRA_MY_APP = "com.kurukurupapa.appsharehelper.intent.extra.MY_APP";
-
     private static final String TAG = IntentService.class.getSimpleName();
     private static final String ANDROID_SYSTEM_PACKAGE_NAME = "android";
 
@@ -267,12 +265,7 @@ public class IntentService {
 
     public void findSrcAppInfo() {
         if (isValidSrcAppFunction()) {
-            if (mIntent.getBooleanExtra(EXTRA_MY_APP, false)) {
-                // 当アプリ内からの呼び出しであると判定
-                setSrcAppInfo(mContext.getPackageName());
-            } else {
-                findSrcAppInfo_Android4();
-            }
+            findSrcAppInfo_Android4();
         } else {
             findSrcAppInfo_Android5();
         }

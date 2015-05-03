@@ -10,15 +10,17 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.fragment.ShareHistoryFragment;
 import com.kurukurupapa.appsharehelper.fragment.NavigationDrawerFragment;
 import com.kurukurupapa.appsharehelper.fragment.StandardAppFragment;
+import com.kurukurupapa.appsharehelper.helper.NotificationHelper;
 import com.kurukurupapa.appsharehelper.model.NavigationDrawerItems;
-import com.kurukurupapa.appsharehelper.service.ClipboardService;
 
+/**
+ * メインアクティビティ
+ */
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks,
         ShareHistoryFragment.OnFragmentInteractionListener,
@@ -35,14 +37,10 @@ public class MainActivity extends Activity
      */
     private CharSequence mTitle;
 
-    /**
-     * クリップボードサービス
-     */
-    private ClipboardService mClipboardService;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate called. savedInstanceState=" + savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
@@ -53,8 +51,21 @@ public class MainActivity extends Activity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        // オブジェクト生成
-        mClipboardService = new ClipboardService(this);
+        // クリップボード共有通知
+        new NotificationHelper(this).notifyClipboardIfNeed();
+    }
+
+    @Override
+    public boolean onNavigationDrawerItemClick(int position) {
+        Log.d(TAG, "onNavigationDrawerItemClick called");
+
+        if (position == NavigationDrawerItems.POSITION_CLIPBOARD) {
+            // 受信アクティビティを起動します。
+            startRecvActivityWithClipboard();
+            // 後続処理をキャンセルします。
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -66,10 +77,7 @@ public class MainActivity extends Activity
             startSettingsActivity();
 
         } else if (position == NavigationDrawerItems.POSITION_CLIPBOARD) {
-            // 受信アクティビティを起動します。
-            startRecvActivityWithClipboard();
-            // ナビゲーションドロワーの選択項目を1番目に戻しておきます。
-            mNavigationDrawerFragment.selectItem(0);
+            // 発生しない
 
         } else {
             // フラグメントを作成する。
@@ -148,14 +156,7 @@ public class MainActivity extends Activity
      * 受信アクティビティを呼び出します。
      */
     private void startRecvActivityWithClipboard() {
-        // インテントを作成
-        Intent intent = mClipboardService.createIntent();
-        if (intent == null) {
-            Toast.makeText(this, getString(R.string.msg_no_clipdata), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // 受信アクティビティを呼び出します。
+        Intent intent = RecvActivity.createIntentForClipboard(this);
         startActivity(intent);
     }
 

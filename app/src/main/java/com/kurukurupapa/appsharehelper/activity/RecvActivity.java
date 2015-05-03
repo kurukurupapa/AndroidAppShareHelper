@@ -17,8 +17,10 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kurukurupapa.appsharehelper.R;
+import com.kurukurupapa.appsharehelper.helper.ClipboardIntentHelper;
 import com.kurukurupapa.appsharehelper.helper.DbHelper;
 import com.kurukurupapa.appsharehelper.helper.NotificationHelper;
 import com.kurukurupapa.appsharehelper.helper.PreferenceHelper;
@@ -43,6 +45,11 @@ public class RecvActivity extends Activity {
     private static final String TAG = RecvActivity.class.getSimpleName();
     private static final String KEY_SRC_PACKAGE_NAME = "src_package_name";
 
+    /** 当アプリから当アクティビティ起動時の動作モード */
+    private static final String EXTRA_MODE_KEY = "com.kurukurupapa.appsharehelper.extra.MODE";
+    /** クリップボード共有の動作モード */
+    private static final String EXTRA_MODE_VALUE_CLIPBOARD = "CLIPBOARD";
+
     private DbHelper mDbHelper;
     private IntentService mIntentService;
     private ShareActivityTableService mShareActivityTableService;
@@ -58,6 +65,16 @@ public class RecvActivity extends Activity {
     private Animation mViewChangeAnimation;
 
     private RecvActivitySrcApp mRecvActivitySrcApp;
+
+    /**
+     * 当アクティビティを起動するインテントを作成します。
+     * @return インテント
+     */
+    public static Intent createIntentForClipboard(Context context) {
+        Intent intent = new Intent(context, RecvActivity.class);
+        intent.putExtra(EXTRA_MODE_KEY, EXTRA_MODE_VALUE_CLIPBOARD);
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,17 +121,8 @@ public class RecvActivity extends Activity {
         }
 
         // インテント取得（初回分）
-        if (savedInstanceState == null) {
-            // 初回表示の場合
-            // または、アプリ終了後に「Recent Apps」（最近使ったアプリ）から呼び出された場合
-            // ※アプリ終了後に最近使ったアプリから呼び出された場合には、
-            //   インテントの送信元アプリを特定することはできません。
-            mIntentService.setIntent(getIntent());
-            mIntentService.findSrcAppInfo();
-        } else {
-            // 再表示の場合（画面ローテーションした場合など）
-            mIntentService.setIntent(getIntent());
-            mIntentService.setSrcAppInfo(savedInstanceState.getString(KEY_SRC_PACKAGE_NAME));
+        if (!setupIntentService(getIntent(), savedInstanceState)) {
+            finish();
         }
     }
 
@@ -138,8 +146,42 @@ public class RecvActivity extends Activity {
         Log.d(TAG, "onNewIntent Called");
 
         // インテントを保持（2回目以降分）
-        mIntentService.setIntent(intent);
-        mIntentService.findSrcAppInfo();
+        if (!setupIntentService(intent, null)) {
+            finish();
+        }
+    }
+
+    /**
+     * インテント受信サービスを設定します。
+     * @param intent アクティビティで取得するインテント
+     * @return 処理成功の場合true
+     */
+    private boolean setupIntentService(Intent intent, Bundle savedInstanceState) {
+        String mode = intent.getStringExtra(EXTRA_MODE_KEY);
+        if (mode != null && mode.equals(EXTRA_MODE_VALUE_CLIPBOARD)) {
+            // クリップボード共有の場合
+            Intent newIntent = new ClipboardIntentHelper(this).createIntent();
+            if (newIntent == null) {
+                Toast.makeText(this, R.string.msg_no_clipdata, Toast.LENGTH_LONG).show();
+                return false;
+            }
+            mIntentService.setIntent(newIntent);
+            mIntentService.setSrcAppInfo(getPackageName());
+        } else {
+            if (savedInstanceState == null) {
+                // 初期表示、または新インテントの場合
+                // または、アプリ終了後に「Recent Apps」（最近使ったアプリ）から呼び出された場合
+                // ※アプリ終了後に最近使ったアプリから呼び出された場合には、
+                //   インテントの送信元アプリを特定することはできません。
+                mIntentService.setIntent(intent);
+                mIntentService.findSrcAppInfo();
+            } else {
+                // 再表示の場合（画面ローテーションした場合など）
+                mIntentService.setIntent(intent);
+                mIntentService.setSrcAppInfo(savedInstanceState.getString(KEY_SRC_PACKAGE_NAME));
+            }
+        }
+        return true;
     }
 
     @Override
@@ -156,6 +198,17 @@ public class RecvActivity extends Activity {
             showDestActivity();
             mRootLayout.startAnimation(mActivityShowAnimation);
             mIntentService.setIntentNoChanged();
+        } else {
+            // クリップボード共有の場合、毎々内容を更新する。
+            // TODO ロジック記述箇所は、あとで再考したい。
+            String mode = getIntent().getStringExtra(EXTRA_MODE_KEY);
+            if (mode != null && mode.equals(EXTRA_MODE_VALUE_CLIPBOARD)) {
+                Intent newIntent = new ClipboardIntentHelper(this).createIntent();
+                if (newIntent != null) {
+                    mIntentService.setIntent(newIntent);
+                    showIntent();
+                }
+            }
         }
     }
 

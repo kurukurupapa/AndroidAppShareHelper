@@ -32,10 +32,11 @@
     <string name="msg_share_history_no_items">共有履歴がありません。&lt;br&gt;&lt;br&gt;使い方は&lt;a href=\&quot;https://play.google.com/store/apps/details?id=com.kurukurupapa.appsharehelper\&quot;&gt;こちら&lt;/a&gt;を参照ください。</string>
     <string name="msg_standard_app_no_items">標準アプリの設定がありません。</string>
     <string name="msg_no_intent_text">テキストデータがありません。</string>
-    <string name="msg_intent_send">共有しました。</string>
     <string name="msg_copy_to_clipboard">クリップボードにコピーしました。</string>
     <string name="msg_no_clipdata">クリップボードに対象データがありません。</string>
-
+    <!-- ノーティフィケーションメッセージ -->
+    <string name="msg_notification_shared">共有しました。</string>
+    <string name="msg_notification_clipboard">クリップボードのデータを共有できます。</string>
     <!-- エラーメッセージ -->
     <string name="msg_err_src_app">共有元アプリの取得に失敗しました。</string>
     <string name="msg_err_intent_str">共有内容の取得に失敗しました。</string>
