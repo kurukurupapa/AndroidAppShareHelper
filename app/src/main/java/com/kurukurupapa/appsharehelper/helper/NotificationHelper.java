@@ -55,9 +55,9 @@ public class NotificationHelper {
         // 通知領域に登録
         NotificationManager nm = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-            nm.notify(ID_CLIPBOARD, builder.getNotification());
+            nm.notify(ID_INTENT_SENDED, builder.getNotification());
         } else {
-            nm.notify(ID_CLIPBOARD, builder.build());
+            nm.notify(ID_INTENT_SENDED, builder.build());
         }
     }
 
