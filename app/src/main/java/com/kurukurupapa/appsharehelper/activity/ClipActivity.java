@@ -10,7 +10,8 @@ import com.kurukurupapa.appsharehelper.R;
 import com.kurukurupapa.appsharehelper.service.IntentService;
 
 /**
- * クリップボードアクティビティ
+ * クリップボードアクティビティ。
+ * データ共有内容をクリップボードへコピーします。
  */
 public class ClipActivity extends Activity {
 
