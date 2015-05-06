@@ -98,7 +98,7 @@ public class NotificationHelper {
                 .setOngoing(true);
 
         // タップ時に起動するインテントを設定します。
-        Intent intent = new Intent(mContext, ClipboardSendActivity.class);
+        Intent intent = MainActivity.createIntentAsClipboardMode(mContext);
         PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         builder.setContentIntent(pendingIntent);
 

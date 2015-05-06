@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
@@ -27,6 +28,11 @@ public class MainActivity extends Activity
         StandardAppFragment.OnFragmentInteractionListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
+    /** インテントのExtra項目キー */
+    private static final String EXTRA_MODE_KEY = MainActivity.class.getName() + ".extra.MODE";
+    /** インテントのExtra項目値 */
+    private static final String EXTRA_MODE_CLIPBOARD = "clipboard";
+
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
@@ -36,6 +42,17 @@ public class MainActivity extends Activity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+
+    /**
+     * 当アクティビティ起動インテントを作成します。
+     * @param context
+     * @return
+     */
+    public static Intent createIntentAsClipboardMode(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra(EXTRA_MODE_KEY, EXTRA_MODE_CLIPBOARD);
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +70,18 @@ public class MainActivity extends Activity
 
         // クリップボード共有通知
         new NotificationHelper(this).notifyClipboardIfNeed();
+
+        // 起動モード選択
+        String mode = getIntent().getStringExtra(EXTRA_MODE_KEY);
+        if (mode != null && mode.equals(EXTRA_MODE_CLIPBOARD)) {
+            startClipboardSendActivity();
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart called.");
     }
 
     @Override
