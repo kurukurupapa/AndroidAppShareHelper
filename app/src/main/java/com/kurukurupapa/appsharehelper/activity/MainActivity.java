@@ -60,8 +60,8 @@ public class MainActivity extends Activity
         Log.d(TAG, "onNavigationDrawerItemClick called");
 
         if (position == NavigationDrawerItems.POSITION_CLIPBOARD) {
-            // 受信アクティビティを起動します。
-            startRecvActivityWithClipboard();
+            // クリップボード共有アクティビティを起動します。
+            startClipboardSendActivity();
             // 後続処理をキャンセルします。
             return false;
         }
@@ -153,10 +153,10 @@ public class MainActivity extends Activity
     }
 
     /**
-     * 受信アクティビティを呼び出します。
+     * クリップボード共有アクティビティを呼び出します。
      */
-    private void startRecvActivityWithClipboard() {
-        Intent intent = RecvActivity.createIntentForClipboard(this);
+    private void startClipboardSendActivity() {
+        Intent intent = new Intent(this, ClipboardSendActivity.class);
         startActivity(intent);
     }
 

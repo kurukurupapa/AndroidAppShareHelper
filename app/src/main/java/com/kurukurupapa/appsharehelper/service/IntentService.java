@@ -48,6 +48,7 @@ public class IntentService {
     private boolean intentChangedFlag;
     private PackageManager mPackageManager;
     private ApplicationInfo mSrcAppInfo;
+    private String mSubName;
     private String mShortIntentStr;
     private boolean mTextFlag;
 
@@ -63,7 +64,9 @@ public class IntentService {
         // インテントを保持
         // Componentには自アクティビティが設定されているのでクリアします。
         mIntent = intent;
-        mIntent.setComponent(null);
+        if (intent != null) {
+            mIntent.setComponent(null);
+        }
         intentChangedFlag = true;
         initShortIntentStr();
         Log.d(TAG, "インテント内容=" + ToStringBuilder.reflectionToString(mIntent));
@@ -80,6 +83,11 @@ public class IntentService {
     private void initShortIntentStr() {
         mShortIntentStr = null;
         mTextFlag = false;
+
+        if (mIntent == null) {
+            mShortIntentStr = mContext.getString(R.string.msg_no_items);
+            return;
+        }
 
         try {
             mShortIntentStr = getShortIntentStr(mIntent);
@@ -330,14 +338,20 @@ public class IntentService {
     }
 
     public void setSrcAppInfo(String srcPackageName) {
+        setSrcAppInfo(srcPackageName, null);
+    }
+
+    public void setSrcAppInfo(String srcPackageName, String subName) {
         // クリア
         mSrcAppInfo = null;
+        mSubName = null;
 
         // インテント呼び出し元アプリを取得
         if (srcPackageName != null) {
             mPackageManager = mContext.getPackageManager();
             try {
                 mSrcAppInfo = mPackageManager.getApplicationInfo(srcPackageName, 0);
+                mSubName = subName;
             } catch (PackageManager.NameNotFoundException e) {
                 Log.w(TAG, "インテント呼び出し元のApplicationInfoの取得に失敗しました。srcPackageName=" + srcPackageName, e);
                 mSrcAppInfo = null;
@@ -363,7 +377,14 @@ public class IntentService {
     }
 
     public CharSequence getSrcAppLabel() {
-        return mSrcAppInfo.loadLabel(mPackageManager);
+        CharSequence label;
+        CharSequence name = mSrcAppInfo.loadLabel(mPackageManager);
+        if (mSubName == null) {
+            label = name;
+        } else {
+            label = name + "\n(" + mSubName + ")";
+        }
+        return label;
     }
 
     public Intent createIntent() {

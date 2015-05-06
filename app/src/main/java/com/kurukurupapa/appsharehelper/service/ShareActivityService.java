@@ -41,6 +41,9 @@ public class ShareActivityService {
      */
     public List<ShareActivityAdapter> find(String srcPackage, Intent srcIntent, boolean isText) {
         List<ShareActivityAdapter> resultShareActivityList = new ArrayList<ShareActivityAdapter>();
+        if (srcIntent == null) {
+            return resultShareActivityList;
+        }
 
         // 共有先アクティビティ候補一覧を取得します。
         TreeMap<ComponentName, ShareActivityAdapter> allShareActivities = getAllShareActivities(srcPackage, srcIntent, isText);

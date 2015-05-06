@@ -35,6 +35,14 @@
                 android:value=".activity.MainActivity" />
         </activity>
 
+        <!-- クリップボード共有アクティビティ -->
+        <activity
+            android:name=".activity.ClipboardSendActivity"
+            android:label="@string/title_activity_clipboard_send"
+            android:parentActivityName=".activity.MainActivity"
+            >
+        </activity>
+
         <!--
         インテント受信アクティビティ
         ※デフォルト設定のままだと、インテント送信元アプリと同じタスク（アクティビティをスタックにまとめたもの）になりました。

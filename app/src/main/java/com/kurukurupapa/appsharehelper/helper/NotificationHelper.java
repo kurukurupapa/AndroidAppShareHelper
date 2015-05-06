@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 
 import com.kurukurupapa.appsharehelper.R;
+import com.kurukurupapa.appsharehelper.activity.ClipboardSendActivity;
 import com.kurukurupapa.appsharehelper.activity.MainActivity;
 import com.kurukurupapa.appsharehelper.activity.RecvActivity;
 
@@ -97,7 +98,7 @@ public class NotificationHelper {
                 .setOngoing(true);
 
         // タップ時に起動するインテントを設定します。
-        Intent intent = RecvActivity.createIntentForClipboard(mContext);
+        Intent intent = new Intent(mContext, ClipboardSendActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         builder.setContentIntent(pendingIntent);
 

@@ -5,6 +5,7 @@
     <string name="title_activity_main">アプリ間共有の助け</string>
     <string name="title_activity_recv">アプリを選択</string>
     <string name="title_activity_clip">クリップボードにコピー</string>
+    <string name="title_activity_clipboard_send">クリップボードから共有</string>
 
     <!-- ナビゲーションドロワー内の項目名 -->
     <string name="title_nav_history">共有履歴</string>
@@ -26,6 +27,7 @@
     <string name="label_standard_app_switch">標準アプリに設定</string>
     <string name="label_extra_key">拡張データ名</string>
     <string name="label_no_use">未使用</string>
+    <string name="label_clipboard">クリップボード</string>
 
     <!-- メッセージ -->
     <string name="msg_no_items">データがありません。</string>
