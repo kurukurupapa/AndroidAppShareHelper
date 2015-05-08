@@ -85,19 +85,6 @@ public class MainActivity extends Activity
     }
 
     @Override
-    public boolean onNavigationDrawerItemClick(int position) {
-        Log.d(TAG, "onNavigationDrawerItemClick called");
-
-        if (position == NavigationDrawerItems.POSITION_CLIPBOARD) {
-            // クリップボード共有アクティビティを起動します。
-            startClipboardSendActivity();
-            // 後続処理をキャンセルします。
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     public void onNavigationDrawerItemSelected(int position) {
         Log.d(TAG, "onNavigationDrawerItemSelected called");
 
@@ -106,7 +93,8 @@ public class MainActivity extends Activity
             startSettingsActivity();
 
         } else if (position == NavigationDrawerItems.POSITION_CLIPBOARD) {
-            // 発生しない
+            // クリップボード共有アクティビティを起動します。
+            startClipboardSendActivity();
 
         } else {
             // フラグメントを作成する。

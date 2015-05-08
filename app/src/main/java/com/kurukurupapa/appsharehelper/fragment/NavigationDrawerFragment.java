@@ -193,26 +193,15 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
 
-    public void selectItem(int position) {
-        // 変更前イベント
-        boolean flag = true;
-        if (mCallbacks != null) {
-            flag = mCallbacks.onNavigationDrawerItemClick(position);
-        }
-
-        // 変更処理
-        if (flag) {
-            mCurrentSelectedPosition = position;
-        }
+    private void selectItem(int position) {
+        mCurrentSelectedPosition = position;
         if (mDrawerListView != null) {
-            mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
+            mDrawerListView.setItemChecked(position, true);
         }
         if (mDrawerLayout != null) {
             mDrawerLayout.closeDrawer(mFragmentContainerView);
         }
-
-        // 変更後イベント
-        if (flag && mCallbacks != null) {
+        if (mCallbacks != null) {
             mCallbacks.onNavigationDrawerItemSelected(position);
         }
     }
@@ -298,13 +287,5 @@ public class NavigationDrawerFragment extends Fragment {
          * Called when an item in the navigation drawer is selected.
          */
         void onNavigationDrawerItemSelected(int position);
-
-        /**
-         * ナビゲーションドロワーがクリックされたとき、選択項目反映前に、呼び出すメソッドです。
-         *
-         * @param position クリックされたポジション
-         * @return 処理継続可能な場合true。
-         */
-        boolean onNavigationDrawerItemClick(int position);
     }
 }
