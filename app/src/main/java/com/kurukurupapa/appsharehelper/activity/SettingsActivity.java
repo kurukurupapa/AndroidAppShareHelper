@@ -44,6 +44,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
 
+    /** 通知フラグのプリファレンスキー */
+    private static final String KEY_NOTIFICATION_FLAG = "notification_flag";
     /** クリップボード監視フラグのプリファレンスキー */
     private static final String KEY_CLIPBOARD_FLAG = "clipboard_flag";
 
@@ -254,7 +256,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(KEY_CLIPBOARD_FLAG)) {
+        if (key.equals(KEY_NOTIFICATION_FLAG)) {
+            // 通知フラグ変更時
+            new NotificationHelper(this).cancelIntentSended();
+        } else if (key.equals(KEY_CLIPBOARD_FLAG)) {
             // クリップボード共有通知フラグ変更時
             new NotificationHelper(this).renotifyClipboardIfNeed();
         }
